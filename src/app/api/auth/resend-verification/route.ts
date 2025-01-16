@@ -6,6 +6,13 @@ export async function POST(req: Request) {
   try {
     const { email } = await req.json();
 
+    if (!email) {
+      return NextResponse.json(
+        { message: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { email }
     });
@@ -24,17 +31,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // 发送新的验证邮件
     await sendVerificationEmail(user.email, user.id);
 
     return NextResponse.json(
-      { message: 'Verification email sent successfully' },
+      { message: 'Verification email sent' },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Resend verification error:', error);
     return NextResponse.json(
-      { message: 'Failed to send verification email' },
+      { message: 'Something went wrong' },
       { status: 500 }
     );
   }

@@ -1,20 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const token = searchParams.get('token');
+
+  if (!token) {
+    return NextResponse.json(
+      { message: 'Token is required' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const { searchParams } = new URL(req.url);
-    const token = searchParams.get('token');
-
-    if (!token) {
-      return NextResponse.json(
-        { message: 'Token is required' },
-        { status: 400 }
-      );
-    }
-
     const verificationToken = await prisma.verificationToken.findUnique({
-      where: { token },
+      where: { token }
     });
 
     if (!verificationToken) {
@@ -31,20 +31,20 @@ export async function GET(req: Request) {
       );
     }
 
-    // 更新用户的邮箱验证状态
     await prisma.user.update({
       where: { email: verificationToken.identifier },
-      data: { emailVerified: new Date() },
+      data: { emailVerified: new Date() }
     });
 
-    // 删除已使用的 token
     await prisma.verificationToken.delete({
-      where: { token },
+      where: { token }
     });
 
-    return NextResponse.redirect(new URL('/email-verified', req.url));
+    return NextResponse.json(
+      { message: 'Email verified successfully' },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error('Email verification error:', error);
     return NextResponse.json(
       { message: 'Something went wrong' },
       { status: 500 }
