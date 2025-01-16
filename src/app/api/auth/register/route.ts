@@ -7,7 +7,6 @@ export async function POST(req: Request) {
   try {
     const { email, password, name } = await req.json();
 
-    // 验证邮箱和密码
     if (!email || !password) {
       return NextResponse.json(
         { message: 'Email and password are required' },
@@ -15,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 检查邮箱是否已被使用
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -27,7 +25,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 创建新用户
     const hashedPassword = await hash(password, 12);
     const user = await prisma.user.create({
       data: {
@@ -38,7 +35,6 @@ export async function POST(req: Request) {
       }
     });
 
-    // 发送验证邮件
     await sendVerificationEmail(user.email, user.id);
 
     return NextResponse.json(
