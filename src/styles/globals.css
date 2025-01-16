@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Quattrocento+Sans:wght@300;400;600&family=Space+Mono&family=Spectral:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 品牌主色 */
+  --color-primary: 109, 184, 137;     /* #6DB889 */
+  --color-primary-hover: 94, 166, 119;
+  --color-primary-active: 79, 143, 101;
+  
+  --color-secondary: 136, 179, 186;    /* #88B3BA */
+  --color-secondary-hover: 119, 158, 165;
+  --color-secondary-active: 101, 137, 144;
+  
+  /* 中性色系 */
+  --color-text-primary: 26, 26, 26;
+  --color-text-secondary: 74, 74, 74;
+  --color-text-tertiary: 113, 113, 113;
+  
+  --color-bg-primary: 255, 255, 255;
+  --color-bg-subtle: 245, 247, 246;
+  
+  /* 功能色 */
+  --color-success: 76, 175, 80;
+  --color-warning: 255, 167, 38;
+  --color-error: 239, 83, 80;
+  --color-info: 66, 165, 245;
+}
+
+/* 基础样式 */
+@layer base {
+  /* 标题系统 */
+  h1 {
+    @apply font-heading text-[2.8em] font-semibold leading-[1.2];
+  }
+  /* ... 其他基础样式 */
+}
+
+/* 组件样式 */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-primary text-white rounded-lg 
+    hover:bg-primary-hover active:bg-primary-active 
+    transition-colors;
+  }
+  /* ... 其他组件样式 */
+} 
