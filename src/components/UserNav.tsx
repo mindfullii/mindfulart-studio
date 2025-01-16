@@ -42,8 +42,11 @@ export function UserNav({ name }: UserNavProps) {
               <span>My Credits</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/subscription" className="w-full flex items-center">
+          <DropdownMenuItem>
+            <Link 
+              href="/subscription" 
+              className="flex items-center"
+            >
               <CreditCardIcon className="mr-2 h-4 w-4" />
               <span>My Subscription</span>
             </Link>

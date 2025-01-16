@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 interface CancelSubscriptionModalProps {
   isOpen: boolean;
@@ -12,24 +13,48 @@ interface CancelSubscriptionModalProps {
 export function CancelSubscriptionModal({ isOpen, onClose, onConfirm }: CancelSubscriptionModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <div className="p-6">
-          <h3 className="text-lg font-medium mb-4">Cancel Subscription</h3>
-          <p className="text-text-secondary mb-4">
-            Are you sure you want to cancel your subscription? You&apos;ll lose access to:
-          </p>
-          <ul className="list-disc list-inside mb-6 text-text-secondary">
-            <li>150 monthly credits</li>
-            <li>All creative spaces</li>
-            <li>High resolution downloads</li>
-            <li>Creation history</li>
-          </ul>
-          <p>You&apos;ll continue to have access until the end of your billing period.</p>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-heading">Cancel Subscription</h2>
+            <button
+              onClick={onClose}
+              className="text-text-secondary hover:text-text-primary"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="mb-6">
+            <p className="text-text-secondary font-body mb-4">
+              Are you sure you want to cancel your subscription? You will:
+            </p>
+            <ul className="space-y-2 mb-4">
+              <li className="text-sm text-text-secondary font-body">
+                • Lose access to premium features
+              </li>
+              <li className="text-sm text-text-secondary font-body">
+                • Keep access until the end of your billing period
+              </li>
+              <li className="text-sm text-text-secondary font-body">
+                • Can resubscribe at any time
+              </li>
+            </ul>
+          </div>
+
           <div className="flex gap-4">
-            <Button variant="outline" onClick={onClose}>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={onClose}
+            >
               Keep Subscription
             </Button>
-            <Button variant="destructive" onClick={onConfirm}>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={onConfirm}
+            >
               Cancel Subscription
             </Button>
           </div>
