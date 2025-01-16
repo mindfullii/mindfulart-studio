@@ -11,7 +11,10 @@ if (!process.env.RESEND_API_KEY) {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function sendVerificationEmail(email: string, userId: string) {
+export async function sendVerificationEmail(email: string) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not defined');
+  }
   if (!email) throw new Error('Email is required');
   
   const verificationToken = generateVerificationToken();
@@ -40,6 +43,21 @@ export async function sendVerificationEmail(email: string, userId: string) {
              style="background-color: #6366f1; color: white; padding: 12px 24px; 
                     text-decoration: none; border-radius: 6px; display: inline-block;">
             Verify Email
+          </a>
+        </div>
+        <p style="color: #666; text-align: center; font-size: 14px;">
+          This link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.
+        </p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+} 
           </a>
         </div>
         <p style="color: #666; text-align: center; font-size: 14px;">

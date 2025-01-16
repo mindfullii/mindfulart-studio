@@ -61,7 +61,7 @@ export default function SubscriptionPage() {
             Cancel Subscription
           </Button>
           <p className="text-xs text-text-secondary text-center mt-2">
-            You'll continue to have access until the end of your billing period
+            You&apos;ll continue to have access until the end of your billing period
           </p>
         </div>
       </div>

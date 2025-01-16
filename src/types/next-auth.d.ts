@@ -3,13 +3,10 @@ import { User as PrismaUser } from '@prisma/client'
 
 declare module 'next-auth' {
   interface Session {
-    user: {
+    user?: {
       id: string;
-      email: string;
       name?: string | null;
-      image?: string | null;
-      credits: number;
-      isSubscribed: boolean;
+      email?: string | null;
     }
   }
 

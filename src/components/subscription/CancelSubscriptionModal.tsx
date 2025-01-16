@@ -24,6 +24,7 @@ export function CancelSubscriptionModal({ isOpen, onClose, onConfirm }: CancelSu
             <li>High resolution downloads</li>
             <li>Creation history</li>
           </ul>
+          <p>You&apos;ll continue to have access until the end of your billing period.</p>
           <div className="flex gap-4">
             <Button variant="outline" onClick={onClose}>
               Keep Subscription

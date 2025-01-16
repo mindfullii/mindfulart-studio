@@ -44,7 +44,8 @@ export async function GET(request: Request) {
       { message: 'Email verified successfully' },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Verification failed:', error);
     return NextResponse.json(
       { message: 'Something went wrong' },
       { status: 500 }
