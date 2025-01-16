@@ -10,5 +10,8 @@ declare module 'next-auth' {
     }
   }
 
-  interface User extends PrismaUser {}
+  interface User extends PrismaUser {
+    credits: number;
+    isSubscribed: boolean;
+  }
 } 

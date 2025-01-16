@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useClickOutside } from '@/hooks/useClickOutside';

@@ -42,8 +42,8 @@ export default function ResendVerificationPage() {
           <h1 className="text-2xl font-heading mb-2 text-center">
             Resend Verification Email
           </h1>
-          <p className="text-text-secondary font-body mb-6 text-center">
-            Enter your email address and we'll send you a new verification link.
+          <p className="text-text-secondary mb-4">
+            Didn&apos;t receive the verification email? Enter your email below to resend it.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

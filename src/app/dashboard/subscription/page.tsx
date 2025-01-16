@@ -14,11 +14,12 @@ import { BuyCreditsModal } from '@/components/credits/BuyCreditsModal';
 import { CancelSubscriptionModal } from '@/components/subscription/CancelSubscriptionModal';
 import { SubscriptionModals } from '@/components/subscription/SubscriptionModals';
 import { TransactionHistory } from '@/components/subscription/TransactionHistory';
+import { logger } from '@/lib/logger';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function SubscriptionPage() {
-  console.log('Rendering SubscriptionPage');
+  logger.debug('Rendering SubscriptionPage');
   
   const { data: session } = useSession();
   console.log('Current session:', session);
@@ -194,8 +195,8 @@ export default function SubscriptionPage() {
             >
               Cancel Subscription
             </Button>
-            <p className="text-xs text-text-secondary text-center mt-2 font-body">
-              You'll continue to have access until the end of your billing period
+            <p className="text-xs text-text-secondary text-center mt-2">
+              You&apos;ll continue to have access until the end of your billing period
             </p>
           </Card>
         </div>

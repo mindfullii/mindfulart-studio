@@ -16,7 +16,7 @@ export function CancelSubscriptionModal({ isOpen, onClose, onConfirm }: CancelSu
         <div className="p-6">
           <h3 className="text-lg font-medium mb-4">Cancel Subscription</h3>
           <p className="text-text-secondary mb-4">
-            Are you sure you want to cancel your subscription? You'll lose access to:
+            Are you sure you want to cancel your subscription? You&apos;ll lose access to:
           </p>
           <ul className="list-disc list-inside mb-6 text-text-secondary">
             <li>150 monthly credits</li>
