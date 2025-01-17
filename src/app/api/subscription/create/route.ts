@@ -6,11 +6,16 @@ import { stripe } from '@/lib/stripe';
 export async function POST(req: Request) {
   try {
     const { priceId, userId } = await req.json();
+    const authSession = await getServerSession(authOptions);
+    
+    if (!authSession?.user?.email) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
     
     // 确定订阅类型
     const isMonthlySub = priceId === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID;
     
-    const session = await stripe.checkout.sessions.create({
+    const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
@@ -20,11 +25,12 @@ export async function POST(req: Request) {
         type: 'subscription',
         userId: userId,
         billingCycle: isMonthlySub ? 'monthly' : 'annual',
-        plan: isMonthlySub ? 'monthly' : 'annual',
+        plan: isMonthlySub ? 'PEACEFUL_MIND_MONTHLY' : 'PEACEFUL_MIND_ANNUAL',
       },
+      customer_email: authSession.user.email,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: stripeSession.url });
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return new NextResponse('Error creating checkout session', { status: 500 });
