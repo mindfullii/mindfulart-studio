@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
     const headersList = headers();
     const signature = headersList.get('stripe-signature') || '';
 
-    console.log('Webhook received:', {
+    logger.log('Webhook received:', {
       signature: !!signature,
       payloadLength: payload.length
     });
@@ -23,11 +24,11 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
-    console.log('Processing webhook event:', event.type);
+    logger.log('Processing webhook event:', event.type);
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      console.log('Checkout session completed:', {
+      logger.log('Checkout session completed:', {
         metadata: session.metadata,
         customerId: session.customer,
         subscriptionId: session.subscription
@@ -69,13 +70,13 @@ export async function POST(req: Request) {
             }),
           ]);
 
-          console.log('Subscription created successfully:', {
+          logger.log('Subscription created successfully:', {
             userId: session.metadata.userId,
             plan: session.metadata.plan,
             credits
           });
         } catch (error) {
-          console.error('Error processing subscription:', error);
+          logger.error('Error processing subscription:', error);
           throw error;
         }
       }
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
 
     return new NextResponse(JSON.stringify({ received: true }));
   } catch (err) {
-    console.error('Webhook error:', err);
+    logger.error('Webhook error:', err);
     return new NextResponse(
       JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }),
       { status: 400 }

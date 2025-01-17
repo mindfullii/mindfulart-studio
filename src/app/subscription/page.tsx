@@ -2,7 +2,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth.config';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-import { headers } from 'next/headers';
 import { SubscriptionPlans } from '@/components/subscription/SubscriptionPlans';
 import { SubscriptionInfo } from '@/components/subscription/SubscriptionInfo';
 

@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { CheckIcon } from '@heroicons/react/24/outline';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 interface SubscriptionPlansProps {
@@ -12,7 +11,6 @@ interface SubscriptionPlansProps {
 
 export function SubscriptionPlans({ userId }: SubscriptionPlansProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubscribe = async (priceId: string) => {
     try {
