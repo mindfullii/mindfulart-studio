@@ -2,115 +2,139 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
+import Stripe from 'stripe';
+
+export const dynamic = 'force-dynamic';
+
+// 添加 runtime 配置
+export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  const body = await req.text();
-  const signature = headers().get('stripe-signature') as string;
-
-  let event;
-
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
+    const rawBody = await req.text();
+    const signature = headers().get('stripe-signature');
+
+    console.log('=== Webhook Debug ===');
+    console.log('Raw body length:', rawBody.length);
+    console.log('Signature present:', !!signature);
+
+    if (!signature) {
+      throw new Error('No signature found');
+    }
+
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      throw new Error('Missing webhook secret');
+    }
+
+    const event = stripe.webhooks.constructEvent(
+      rawBody,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (err) {
-    return new NextResponse(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown Error'}`, { status: 400 });
-  }
 
-  const session = event.data.object as any;
+    console.log('Event constructed successfully:', event.type);
 
-  switch (event.type) {
-    case 'checkout.session.completed':
-      const checkoutSession = event.data.object as any;
-      
-      try {
-        if (checkoutSession.metadata.type === 'credits') {
-          // 处理积分购买
-          await prisma.user.update({
-            where: {
-              id: checkoutSession.metadata.userId,
-            },
-            data: {
-              credits: {
-                increment: parseInt(checkoutSession.metadata.credits),
-              },
-            },
-          });
-        } else {
-          // 获取 Stripe 订阅详情
-          const stripeSubscription = await stripe.subscriptions.retrieve(
-            checkoutSession.subscription
-          );
+    // 处理 checkout.session.completed 事件
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      console.log('Processing checkout session:', {
+        id: session.id,
+        metadata: session.metadata,
+      });
 
-          // 检查是否已存在订阅
-          const existingSubscription = await prisma.subscription.findFirst({
-            where: {
-              userId: checkoutSession.metadata.userId,
-              status: 'active',
-            },
+      if (session.metadata?.type === 'subscription') {
+        try {
+          const isMonthly = session.metadata.billingCycle === 'monthly';
+          const credits = isMonthly ? 150 : 1800;
+          
+          console.log('Processing subscription:', {
+            billingCycle: session.metadata.billingCycle,
+            credits,
+            plan: session.metadata.plan,
           });
 
-          if (!existingSubscription) {
-            await prisma.subscription.create({
+          await prisma.$transaction([
+            prisma.subscription.create({
               data: {
-                userId: checkoutSession.metadata.userId,
-                plan: checkoutSession.metadata.plan,
+                userId: session.metadata.userId,
+                plan: session.metadata.plan,
                 status: 'active',
-                billingCycle: checkoutSession.metadata.billingCycle,
-                stripeCustomerId: checkoutSession.customer,
-                stripeSubscriptionId: checkoutSession.subscription,
+                billingCycle: session.metadata.billingCycle,
+                stripeCustomerId: session.customer as string,
+                stripeSubscriptionId: session.subscription as string,
                 startDate: new Date(),
-                endDate: stripeSubscription.current_period_end 
-                  ? new Date(stripeSubscription.current_period_end * 1000)
-                  : null,
-                user: {
-                  connect: {
-                    id: checkoutSession.metadata.userId
-                  }
-                }
+                endDate: null,
               },
-            });
-
-            // 更新用户状态和积分
-            await prisma.user.update({
-              where: {
-                id: checkoutSession.metadata.userId,
-              },
+            }),
+            prisma.user.update({
+              where: { id: session.metadata.userId },
               data: {
                 isSubscribed: true,
                 credits: {
-                  increment: checkoutSession.metadata.billingCycle === 'monthly' ? 150 : 1800
-                }
+                  increment: credits,
+                },
               },
-            });
-          }
+            }),
+            prisma.creditHistory.create({
+              data: {
+                userId: session.metadata.userId,
+                amount: credits,
+                type: 'subscription',
+                description: `${isMonthly ? 'Monthly' : 'Annual'} subscription credits`,
+              },
+            }),
+          ]);
+          console.log('Subscription processed successfully');
+        } catch (error) {
+          console.error('Database transaction failed:', error);
+          throw error;
         }
-      } catch (error) {
-        console.error('Error processing checkout session:', error);
-        // 继续处理其他 webhook 事件
       }
-      break;
+    }
 
-    case 'customer.subscription.updated':
-    case 'customer.subscription.deleted':
-      // 处理订阅更新/取消
-      const subscription = await prisma.subscription.findFirst({
-        where: { stripeSubscriptionId: session.id },
+    // 在 checkout.session.completed 事件处理后添加
+    if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as Stripe.Subscription;
+      
+      // 查找并更新订阅记录
+      const dbSubscription = await prisma.subscription.findFirst({
+        where: {
+          stripeSubscriptionId: subscription.id,
+        },
       });
 
-      if (subscription) {
-        await prisma.subscription.update({
-          where: { id: subscription.id },
-          data: {
-            status: session.status,
-            endDate: session.cancel_at ? new Date(session.cancel_at * 1000) : null,
-          },
-        });
+      if (dbSubscription) {
+        await prisma.$transaction([
+          prisma.subscription.update({
+            where: { id: dbSubscription.id },
+            data: {
+              status: 'canceled',
+              endDate: new Date(),
+            },
+          }),
+          prisma.user.update({
+            where: { id: dbSubscription.userId },
+            data: {
+              isSubscribed: false,
+            },
+          }),
+        ]);
       }
-      break;
-  }
+    }
 
-  return new NextResponse(null, { status: 200 });
+    return new NextResponse(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  } catch (err) {
+    console.error('Webhook Error:', err);
+    return new NextResponse(
+      JSON.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }),
+      { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
 } 

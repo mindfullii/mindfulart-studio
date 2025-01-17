@@ -1,65 +1,81 @@
 'use client';
 
-import { Dialog, DialogContent } from '@/components/ui/Dialog';
-import { Button } from '@/components/ui/Button';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-interface CancelSubscriptionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}
+export function CancelSubscriptionModal() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-export function CancelSubscriptionModal({ isOpen, onClose, onConfirm }: CancelSubscriptionModalProps) {
+  const handleCancel = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/subscription/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to cancel subscription');
+    } finally {
+      setIsLoading(false);
+      setIsOpen(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-heading">Cancel Subscription</h2>
-            <button
-              onClick={onClose}
-              className="text-text-secondary hover:text-text-primary"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
+    <>
+      <Button
+        variant="destructive"
+        onClick={() => setIsOpen(true)}
+        className="ml-auto"
+      >
+        Cancel Subscription
+      </Button>
 
-          <div className="mb-6">
-            <p className="text-text-secondary font-body mb-4">
-              Are you sure you want to cancel your subscription? You will:
-            </p>
-            <ul className="space-y-2 mb-4">
-              <li className="text-sm text-text-secondary font-body">
-                • Lose access to premium features
-              </li>
-              <li className="text-sm text-text-secondary font-body">
-                • Keep access until the end of your billing period
-              </li>
-              <li className="text-sm text-text-secondary font-body">
-                • Can resubscribe at any time
-              </li>
-            </ul>
-          </div>
-
-          <div className="flex gap-4">
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Cancel Subscription</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
-              className="flex-1"
-              onClick={onClose}
+              onClick={() => setIsOpen(false)}
+              disabled={isLoading}
             >
               Keep Subscription
             </Button>
             <Button
               variant="destructive"
-              className="flex-1"
-              onClick={onConfirm}
+              onClick={handleCancel}
+              disabled={isLoading}
             >
-              Cancel Subscription
+              {isLoading ? 'Canceling...' : 'Yes, Cancel'}
             </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 } 

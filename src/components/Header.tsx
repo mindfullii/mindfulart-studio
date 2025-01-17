@@ -4,81 +4,55 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
 import { UserNav } from './UserNav';
+import { MainNav } from './MainNav';
 import { AuthModal } from '@/components/auth/AuthModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // 使用 useEffect 来处理客户端水合
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 在客户端水合之前不渲染认证相关的 UI
+  if (!mounted) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <MainNav />
+          <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+            <nav className="flex items-center space-x-2">
+              <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+            </nav>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white">
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link 
-            href="/" 
-            className="font-heading text-xl font-bold tracking-tight"
-          >
-            MindfulArt Studio
-          </Link>
-
-          {/* Navigation */}
-          <nav className="mx-6 flex items-center space-x-4 lg:space-x-6 flex-1 justify-center">
-            <Link 
-              href="/" 
-              className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
-            >
-              Home
-            </Link>
-            <div className="relative group">
-              <Link 
-                href="/explore" 
-                className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
-              >
-                Explore
-              </Link>
-              {/* Mega Menu */}
-              <div className="absolute top-full left-0 hidden group-hover:block w-48 bg-white border rounded-lg shadow-lg p-4">
-                {/* Mega Menu 内容 */}
-              </div>
-            </div>
-            <div className="relative group">
-              <Link 
-                href="/create" 
-                className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
-              >
-                Create
-              </Link>
-              {/* Mega Menu */}
-              <div className="absolute top-full left-0 hidden group-hover:block w-48 bg-white border rounded-lg shadow-lg p-4">
-                {/* Mega Menu 内容 */}
-              </div>
-            </div>
-            <Link 
-              href="/pricing" 
-              className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link 
-              href="/blog" 
-              className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
-            >
-              Blog
-            </Link>
-          </nav>
-
-          {/* Auth */}
-          <div className="flex items-center gap-4">
-            {session ? (
-              <UserNav name={session.user?.name} />
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <MainNav />
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <nav className="flex items-center space-x-2">
+            {status === 'loading' ? (
+              <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+            ) : status === 'authenticated' ? (
+              <UserNav user={session.user} />
             ) : (
-              <Button onClick={() => setShowAuthModal(true)}>
+              <Button 
+                variant="default" 
+                onClick={() => setShowAuthModal(true)}
+              >
                 Sign In
               </Button>
             )}
-          </div>
+          </nav>
         </div>
       </div>
 

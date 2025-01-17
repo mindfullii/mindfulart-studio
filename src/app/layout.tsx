@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Mono } from 'next/font/google';
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
@@ -24,16 +25,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} ${spaceMono.variable}`}>
-        <AuthProvider>
-          <Header />
-          <main>
-            {children}
-          </main>
-          <Footer />
-          <Toaster />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Header />
+            <main className="min-h-screen">
+              {children}
+            </main>
+            <Footer />
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

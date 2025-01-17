@@ -13,15 +13,38 @@ export const authOptions: AuthOptions = {
     }),
   ],
   session: {
-    strategy: 'jwt'
+    strategy: 'database',
   },
   pages: {
-    signIn: '/login',
+    signIn: '/',
+    error: '/',
+  },
+  events: {
+    async createUser({ user }) {
+      // 当用户创建时添加积分历史记录
+      await prisma.creditHistory.create({
+        data: {
+          userId: user.id,
+          amount: 10,
+          type: 'welcome',
+          description: 'Welcome bonus credits',
+        },
+      });
+    },
   },
   callbacks: {
-    async session({ session, token }) {
+    async session({ session, user }) {
       if (session.user) {
-        session.user.id = token.sub!;
+        session.user.id = user.id;
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            credits: true,
+            isSubscribed: true,
+          },
+        });
+        session.user.credits = dbUser?.credits || 0;
+        session.user.isSubscribed = dbUser?.isSubscribed || false;
       }
       return session;
     },

@@ -13,17 +13,27 @@ import {
 } from '@/components/ui/DropdownMenu';
 import { Button } from '@/components/ui/Button';
 import { CreditCardIcon, UserIcon, LogOutIcon, CoinsIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar';
 
 interface UserNavProps {
-  name?: string | null;
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 }
 
-export function UserNav({ name }: UserNavProps) {
+export function UserNav({ user }: UserNavProps) {
+  const router = useRouter();
+
+  if (!user) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative">
-          Hi, {name || 'User'}
+          Hey, {user.name?.split(' ')[0] || 'User'}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
