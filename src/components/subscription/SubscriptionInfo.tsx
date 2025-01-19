@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { formatDate } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { InvoiceHistoryModal } from './InvoiceHistory';
 
 interface SubscriptionInfoProps {
   subscription: Subscription;
@@ -13,6 +15,7 @@ interface SubscriptionInfoProps {
 
 export function SubscriptionInfo({ subscription }: SubscriptionInfoProps) {
   const router = useRouter();
+  const [showInvoices, setShowInvoices] = useState(false);
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -30,62 +33,69 @@ export function SubscriptionInfo({ subscription }: SubscriptionInfoProps) {
   };
 
   return (
-    <Card className="p-8 bg-white shadow-sm border border-border/50">
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h2 className="text-2xl font-heading mb-2">Current Plan</h2>
-          <p className="text-text-secondary/80">
-            {subscription.billingCycle === 'monthly' ? 'Monthly' : 'Annual'} Plan
-          </p>
-        </div>
-        <div className="text-right">
-          <div className="text-sm text-text-secondary/70 mb-2">Status</div>
-          <span 
-            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusBadgeClass(subscription.status)}`}
-          >
-            {subscription.status}
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-8 mb-8 bg-gray-50/50 p-6 rounded-lg">
-        <div>
-          <div className="text-sm text-text-secondary/70 mb-2">Start Date</div>
-          <div className="font-mono text-lg">{formatDate(subscription.startDate)}</div>
-        </div>
-        <div>
-          <div className="text-sm text-text-secondary/70 mb-2">
-            {subscription.status === 'canceled' ? 'End Date' : 'Next Billing Date'}
+    <>
+      <Card className="p-8 bg-white shadow-sm border border-border/50">
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h2 className="text-2xl font-heading mb-2">Current Plan</h2>
+            <p className="text-text-secondary/80">
+              {subscription.billingCycle === 'monthly' ? 'Monthly' : 'Annual'} Plan
+            </p>
           </div>
-          <div className="font-mono text-lg">
-            {formatDate(subscription.endDate || new Date(subscription.startDate).setMonth(
-              new Date(subscription.startDate).getMonth() + 1
-            ))}
+          <div className="text-right">
+            <div className="text-sm text-text-secondary/70 mb-2">Status</div>
+            <span 
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusBadgeClass(subscription.status)}`}
+            >
+              {subscription.status}
+            </span>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center justify-between pt-6 border-t border-border/30">
-        <Button 
-          variant="outline" 
-          size="lg"
-          className="text-text-secondary hover:bg-gray-50"
-          onClick={() => {/* TODO: Show invoice history */}}
-        >
-          View Invoices
-        </Button>
-        {subscription.status === 'active' ? (
-          <CancelSubscriptionModal />
-        ) : (
+        <div className="grid grid-cols-2 gap-8 mb-8 bg-gray-50/50 p-6 rounded-lg">
+          <div>
+            <div className="text-sm text-text-secondary/70 mb-2">Start Date</div>
+            <div className="font-mono text-lg">{formatDate(subscription.startDate)}</div>
+          </div>
+          <div>
+            <div className="text-sm text-text-secondary/70 mb-2">
+              {subscription.status === 'canceled' ? 'End Date' : 'Next Billing Date'}
+            </div>
+            <div className="font-mono text-lg">
+              {formatDate(subscription.endDate || new Date(subscription.startDate).setMonth(
+                new Date(subscription.startDate).getMonth() + 1
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-6 border-t border-border/30">
           <Button 
-            onClick={handleResubscribe}
+            variant="outline" 
             size="lg"
-            className="bg-primary text-white hover:bg-primary/90"
+            className="text-text-secondary hover:bg-gray-50"
+            onClick={() => setShowInvoices(true)}
           >
-            Resubscribe
+            View Invoices
           </Button>
-        )}
-      </div>
-    </Card>
+          {subscription.status === 'active' ? (
+            <CancelSubscriptionModal />
+          ) : (
+            <Button 
+              onClick={handleResubscribe}
+              size="lg"
+              className="bg-primary text-white hover:bg-primary/90"
+            >
+              Resubscribe
+            </Button>
+          )}
+        </div>
+      </Card>
+
+      <InvoiceHistoryModal 
+        isOpen={showInvoices} 
+        onClose={() => setShowInvoices(false)} 
+      />
+    </>
   );
 } 

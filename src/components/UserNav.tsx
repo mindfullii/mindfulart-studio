@@ -29,6 +29,13 @@ export function UserNav({ user }: UserNavProps) {
 
   if (!user) return null;
 
+  const handleSignOut = async () => {
+    await signOut({ 
+      callbackUrl: '/',
+      redirect: true 
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -65,7 +72,7 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           className="text-red-600 cursor-pointer"
-          onClick={() => signOut()}
+          onClick={handleSignOut}
         >
           <LogOutIcon className="mr-2 h-4 w-4" />
           <span>Sign Out</span>

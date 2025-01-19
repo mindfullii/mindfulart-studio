@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
 import { UserNav } from './UserNav';
@@ -13,21 +12,19 @@ export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // 使用 useEffect 来处理客户端水合
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 在客户端水合之前不渲染认证相关的 UI
   if (!mounted) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <MainNav />
-          <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-            <nav className="flex items-center space-x-2">
+      <header className="sticky top-0 z-50 w-full border rounded-lg border-gray-200">
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <MainNav />
+            <div className="flex items-center">
               <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
-            </nav>
+            </div>
           </div>
         </div>
       </header>
@@ -35,11 +32,11 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <MainNav />
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-2">
+    <header className="sticky top-0 z-50 w-full border rounded-lg border-gray-200">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <MainNav />
+          <div className="flex items-center">
             {status === 'loading' ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
             ) : status === 'authenticated' ? (
@@ -48,11 +45,12 @@ export function Header() {
               <Button 
                 variant="default" 
                 onClick={() => setShowAuthModal(true)}
+                className="ml-4 font-space-mono text-[14px] tracking-[0.02em] font-normal border border-gray-200 bg-transparent hover:bg-gray-50 text-gray-600"
               >
-                Sign In
+                Sign In / Sign Up 
               </Button>
             )}
-          </nav>
+          </div>
         </div>
       </div>
 

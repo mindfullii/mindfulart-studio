@@ -39,6 +39,7 @@ module.exports = {
         subheading: ['Spectral', 'serif'],
         body: ['Quattrocento Sans', 'sans-serif'],
         mono: ['var(--font-space-mono)', 'monospace'],
+        'space-mono': ['Space Mono', 'monospace'],
       },
     },
   },
