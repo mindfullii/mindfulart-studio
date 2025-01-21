@@ -5,35 +5,16 @@ import { Button } from '@/components/ui/Button';
 import { UserNav } from './UserNav';
 import { MainNav } from './MainNav';
 import { AuthModal } from '@/components/auth/AuthModal';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { Container } from '@/components/ui/Container';
 
 export function Header() {
   const { data: session, status } = useSession();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <header className="sticky top-0 z-50 w-full border rounded-lg border-gray-200">
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <MainNav />
-            <div className="flex items-center">
-              <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
-            </div>
-          </div>
-        </div>
-      </header>
-    );
-  }
 
   return (
-    <header className="sticky top-0 z-50 w-full border rounded-lg border-gray-200">
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full bg-[#F5F7F6] border-b border-gray-200/60">
+      <Container size="wide">
         <div className="flex h-16 items-center justify-between">
           <MainNav />
           <div className="flex items-center">
@@ -52,7 +33,7 @@ export function Header() {
             )}
           </div>
         </div>
-      </div>
+      </Container>
 
       <AuthModal 
         isOpen={showAuthModal} 

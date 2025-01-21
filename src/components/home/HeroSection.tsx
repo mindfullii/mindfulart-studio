@@ -16,6 +16,7 @@ export function HeroSection() {
           fill
           className="object-cover brightness-[0.85]"
           priority
+          sizes="100vw"
         />
       </div>
 
@@ -23,18 +24,17 @@ export function HeroSection() {
       <div className="relative h-full flex items-center">
         <div className="container mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
             className="max-w-2xl"
           >
-            <h1 className="text-5xl md:text-6xl font-heading text-white mb-6">
+            <h1 className="text-5xl md:text-6xl font-heading text-white mb-6 animate-fade-in">
               Create Mindful Art with AI
             </h1>
-            <p className="text-xl text-white/90 mb-8 font-body">
+            <p className="text-xl text-white/90 mb-8 font-body animate-fade-in animation-delay-100">
               Transform your imagination into beautiful artworks while practicing mindfulness
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 animate-fade-in animation-delay-200">
               <Button 
                 size="lg"
                 className="bg-white text-primary hover:bg-white/90"

@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { AuthModal } from '@/components/auth/AuthModal';
-import { useSession } from 'next-auth/react';
 import { Menu } from 'lucide-react';
 
 type MenuItem = {
@@ -98,32 +96,22 @@ const menuItems: MenuItem[] = [
 ];
 
 export function MainNav() {
-  const { data: session } = useSession();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const menuTimeoutRef = useRef<NodeJS.Timeout>();
   const pathname = usePathname();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleMouseEnter = (label: string) => {
+  const handleMouseEnter = useCallback((label: string) => {
     if (menuTimeoutRef.current) {
       clearTimeout(menuTimeoutRef.current);
     }
     setActiveMenu(label);
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     menuTimeoutRef.current = setTimeout(() => {
       setActiveMenu(null);
     }, 100);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (menuTimeoutRef.current) {
-        clearTimeout(menuTimeoutRef.current);
-      }
-    };
   }, []);
 
   return (
@@ -137,6 +125,7 @@ export function MainNav() {
                 src="/images/logo.svg"
                 alt="MindfulArt"
                 className="h-10 w-auto"
+                loading="eager"
               />
             </Link>
 
@@ -169,48 +158,51 @@ export function MainNav() {
                     </button>
                   )}
 
-                  {/* Dropdown Menu */}
-                  {item.children && activeMenu === item.label && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-screen max-w-md px-2"
-                    >
-                      <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
-                        <div className="relative grid gap-6 bg-white p-6 sm:gap-8">
-                          {item.children.map((child) => (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              className="flex items-start p-3 -m-3 rounded-lg hover:bg-gray-50 transition ease-in-out duration-150"
-                            >
-                              {child.image && (
-                                <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden mr-4">
-                                  <img
-                                    src={child.image}
-                                    alt={child.label}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              )}
-                              <div>
-                                <p className="text-base font-garamond text-gray-900">
-                                  {child.label}
-                                </p>
-                                {child.description && (
-                                  <p className="mt-1 text-sm font-quattrocento text-gray-500">
-                                    {child.description}
-                                  </p>
+                  {/* Dropdown Menu with AnimatePresence */}
+                  <AnimatePresence>
+                    {item.children && activeMenu === item.label && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-screen max-w-md px-2"
+                      >
+                        <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
+                          <div className="relative grid gap-6 bg-white p-6 sm:gap-8">
+                            {item.children.map((child) => (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className="flex items-start p-3 -m-3 rounded-lg hover:bg-gray-50 transition ease-in-out duration-150"
+                              >
+                                {child.image && (
+                                  <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden mr-4">
+                                    <img
+                                      src={child.image}
+                                      alt=""
+                                      className="w-full h-full object-cover"
+                                      loading="lazy"
+                                    />
+                                  </div>
                                 )}
-                              </div>
-                            </Link>
-                          ))}
+                                <div>
+                                  <p className="text-base font-garamond text-gray-900">
+                                    {child.label}
+                                  </p>
+                                  {child.description && (
+                                    <p className="mt-1 text-sm font-quattrocento text-gray-500">
+                                      {child.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
@@ -219,56 +211,60 @@ export function MainNav() {
             <button
               className="md:hidden ml-auto"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
             >
               <Menu className="h-6 w-6" />
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              {menuItems.map((item) => (
-                <div key={item.label}>
-                  {item.href ? (
-                    <Link
-                      href={item.href}
-                      className="block px-3 py-2 text-base font-space-mono"
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button className="w-full text-left px-3 py-2 text-base font-space-mono">
-                      {item.label}
-                    </button>
-                  )}
-                  {/* Mobile Dropdown */}
-                  {item.children && (
-                    <div className="pl-4">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className="block px-3 py-2 text-sm font-space-mono"
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Mobile Menu with AnimatePresence */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                {menuItems.map((item) => (
+                  <div key={item.label}>
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        className="block px-3 py-2 text-base font-space-mono"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <button className="w-full text-left px-3 py-2 text-base font-space-mono">
+                        {item.label}
+                      </button>
+                    )}
+                    {item.children && (
+                      <div className="pl-4">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className="block px-3 py-2 text-sm font-space-mono"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
-
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
     </>
   );
 } 
