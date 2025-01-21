@@ -1,21 +1,16 @@
-import { Container } from '../../../components/ui/Container';
-import { BlogPostBanner } from '../../../components/blog/BlogPostBanner';
-import { BlogPostContent } from '../../../components/blog/BlogPostContent';
-import { RecommendedPosts } from '../../../components/blog/RecommendedPosts';
+import { Container } from '@/components/ui/Container';
+import { BlogPostBanner } from '@/components/blog/BlogPostBanner';
+import { BlogPostContent } from '@/components/blog/BlogPostContent';
+import { RecommendedPosts } from '@/components/blog/RecommendedPosts';
+import { getBlogPost } from '@/lib/contentful';
+import { notFound } from 'next/navigation';
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  // TODO: Fetch post data based on slug
-  const post = {
-    title: "Artist Directory: Daniel McMahon",
-    category: "Artist Directory",
-    date: "January 16, 2025",
-    coverImage: "/images/blog/posts/post1.jpg",
-    content: `Born and raised in Sydney, Australia, Daniel McMahon is a talented pencil artist who has honed his skills through years of practice and dedication to his craft. His passion for art began at a young age, and he has since developed a unique style that showcases his ability to capture the beauty of the world around him.
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = await getBlogPost(params.slug);
 
-Daniel specializes in pencil drawings, using the medium to create highly-detailed and intricate artworks that convey a sense of depth and realism. His subjects range from landscapes and cityscapes to portraits and still life, and he is always exploring new techniques and styles to push his art to new heights.
-
-Over the years, Daniel has gained recognition for his work, with his pieces being featured in several exhibitions and art shows throughout Sydney. Daniel's dedication to his craft has also earned him a loyal following on social media, where he shares his latest creations with a growing audience of art enthusiasts.`
-  };
+  if (!post) {
+    notFound();
+  }
 
   return (
     <main className="pb-12">
@@ -26,7 +21,7 @@ Over the years, Daniel has gained recognition for his work, with his pieces bein
             <BlogPostContent content={post.content} />
           </div>
           <div className="lg:col-span-1">
-            <RecommendedPosts currentSlug={params.slug} />
+            <RecommendedPosts currentPost={post} />
           </div>
         </div>
       </Container>

@@ -1,6 +1,6 @@
 import type { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { PrismaAdapter } from '@auth/prisma-adapter';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 
 export const authOptions: AuthOptions = {
@@ -16,8 +16,8 @@ export const authOptions: AuthOptions = {
     strategy: 'database',
   },
   pages: {
-    signIn: '/',
-    error: '/',
+    signIn: '/login',
+    error: '/login',
   },
   events: {
     async createUser({ user }) {

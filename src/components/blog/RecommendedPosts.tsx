@@ -1,31 +1,22 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import type { BlogPost } from '@/lib/contentful';
 
 interface RecommendedPostsProps {
-  currentSlug: string;
+  currentPost: BlogPost;
 }
 
-export function RecommendedPosts({ currentSlug }: RecommendedPostsProps) {
-  // TODO: 这里后续会根据当前文章获取相关推荐
-  const recommendedPosts = [
-    {
-      title: "The Art of Digital Mindfulness",
-      excerpt: "Exploring how digital artists are incorporating mindfulness practices...",
-      slug: "digital-mindfulness-art",
-      coverImage: "/images/blog/posts/post2.jpg"
-    },
-    {
-      title: "Meditation Through Color Theory",
-      excerpt: "Discover how understanding color theory can enhance your mindful art practice...",
-      slug: "meditation-color-theory",
-      coverImage: "/images/blog/posts/post3.jpg"
-    }
-  ].filter(post => post.slug !== currentSlug);
+export function RecommendedPosts({ currentPost }: RecommendedPostsProps) {
+  const recommendedPosts = currentPost.relatedBlogPosts || [];
+
+  if (recommendedPosts.length === 0) {
+    return null;
+  }
 
   return (
     <aside>
-      <h2 className="text-2xl font-heading mb-6">Recommended Articles</h2>
+      <h2 className="text-2xl font-heading mb-6">Related Articles</h2>
       <div className="space-y-6">
         {recommendedPosts.map((post) => (
           <Link
@@ -34,21 +25,25 @@ export function RecommendedPosts({ currentSlug }: RecommendedPostsProps) {
             className="group block"
           >
             <article className="grid grid-cols-3 gap-4">
-              <div className="relative aspect-[4/3]">
-                <Image
-                  src={post.coverImage}
-                  alt={post.title}
-                  fill
-                  className="object-cover rounded-lg"
-                />
-              </div>
+              {post.featuredImage && (
+                <div className="relative aspect-[4/3]">
+                  <Image
+                    src={post.featuredImage.url}
+                    alt={post.featuredImage.title}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                </div>
+              )}
               <div className="col-span-2">
                 <h3 className="font-heading text-lg group-hover:text-primary transition-colors">
                   {post.title}
                 </h3>
-                <p className="text-sm text-text-secondary line-clamp-2 mt-2">
-                  {post.excerpt}
-                </p>
+                {post.subtitle && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                    {post.subtitle}
+                  </p>
+                )}
               </div>
             </article>
           </Link>
