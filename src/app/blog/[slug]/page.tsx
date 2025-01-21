@@ -1,7 +1,7 @@
-import { Container } from '@/components/ui/Container';
-import { BlogPostBanner } from '@/components/blog/BlogPostBanner';
-import { BlogPostContent } from '@/components/blog/BlogPostContent';
-import { RecommendedPosts } from '@/components/blog/RecommendedPosts';
+import { Container } from '../../../components/ui/Container';
+import { BlogPostBanner } from '../../../components/blog/BlogPostBanner';
+import { BlogPostContent } from '../../../components/blog/BlogPostContent';
+import { RecommendedPosts } from '../../../components/blog/RecommendedPosts';
 
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   // TODO: Fetch post data based on slug
