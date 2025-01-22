@@ -1,80 +1,111 @@
-import type { AuthOptions } from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { prisma } from '@/lib/prisma';
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { NextAuthOptions } from "next-auth";
+import type { Session, User } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+import type { AdapterUser } from "@auth/core/adapters";
+import Google from "next-auth/providers/google";
+import { prisma } from "./prisma";
 
-export const authOptions: AuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+interface ExtendedUser extends User {
+  credits: number;
+  isSubscribed: boolean;
+}
+
+type ExtendedSession = Session & {
+  user: {
+    id: string;
+    credits: number;
+    isSubscribed: boolean;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+}
+
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt" as const,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
   providers: [
-    GoogleProvider({
+    Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  session: {
-    strategy: 'database',
-  },
-  pages: {
-    signIn: '/login',
-    error: '/login',
+  callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      return true;
+    },
+    async redirect({ url, baseUrl }) {
+      // Check if there's a returnUrl in the URL
+      try {
+        const parsedUrl = new URL(url);
+        const returnUrl = parsedUrl.searchParams.get('returnUrl');
+        if (returnUrl) {
+          // Make sure the returnUrl is safe (starts with a slash and is a relative path)
+          if (returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+            return `${baseUrl}${returnUrl}`;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing URL:', error);
+      }
+
+      // If no valid returnUrl is found, handle the URL directly
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+
+      // Default fallback
+      return baseUrl;
+    },
+    async jwt({ token, user }: { token: JWT; user?: User }) {
+      if (user) {
+        token.id = user.id;
+        token.credits = (user as ExtendedUser).credits;
+        token.isSubscribed = (user as ExtendedUser).isSubscribed;
+      }
+      return token;
+    },
+    async session({ session, token }: { session: Session; token: JWT }): Promise<ExtendedSession> {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id as string,
+          credits: token.credits as number,
+          isSubscribed: token.isSubscribed as boolean,
+        },
+      };
+    },
   },
   events: {
-    async createUser({ user }) {
-      // 更新用户的初始积分
+    async createUser({ user }: { user: AdapterUser }) {
+      // Give new users 10 free credits
       await prisma.user.update({
         where: { id: user.id },
         data: { credits: 10 },
       });
 
-      // 添加积分历史记录
+      // Record the credit history
       await prisma.creditHistory.create({
         data: {
           userId: user.id,
           amount: 10,
-          type: 'welcome',
-          description: 'Welcome bonus credits',
+          type: "WELCOME",
+          description: "Welcome bonus credits",
         },
       });
-    },
-  },
-  callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        // 获取用户的最新信息
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: {
-            credits: true,
-            isSubscribed: true,
-            name: true,
-            email: true,
-            image: true,
-          },
-        });
-        
-        if (dbUser) {
-          session.user.credits = dbUser.credits;
-          session.user.isSubscribed = dbUser.isSubscribed;
-          session.user.name = dbUser.name;
-          session.user.email = dbUser.email;
-          session.user.image = dbUser.image;
-        }
-      }
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      // 如果URL是相对路径，添加baseUrl
-      if (url.startsWith('/')) {
-        return `${baseUrl}${url}`;
-      }
-      // 如果URL已经是完整的URL，并且是同一个域名，直接返回
-      else if (url.startsWith(baseUrl)) {
-        return url;
-      }
-      // 默认重定向到首页
-      return baseUrl;
     },
   },
 }; 

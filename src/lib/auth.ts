@@ -1,7 +1,20 @@
 import NextAuth from "next-auth";
+import type { DefaultSession } from "next-auth";
 import { authConfig } from "./auth.config";
 
-const handler = NextAuth(authConfig);
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      credits: number;
+      isSubscribed: boolean;
+    } & DefaultSession["user"]
+  }
+}
 
-export { handler as auth };
-export const { GET, POST } = handler;
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth(authConfig);

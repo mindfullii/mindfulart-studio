@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
 } from "@/components/ui/Dialog"
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
@@ -67,6 +68,70 @@ const emotionalStates = {
   'need-grounding': 'finding stability and connection',
   'want-inspiration': 'seeking uplift and creative flow'
 } as const;
+
+// Theme Categories and Mappings
+const themeCategories = [
+  {
+    title: "Traditional Mindfulness",
+    borderColor: "border-gray-300",
+    themes: [
+      { id: 'mandala', label: 'Mandala' },
+      { id: 'zen-circle', label: 'Zen Circle' },
+      { id: 'sacred-geometry', label: 'Sacred Geometry' },
+      { id: 'lotus-pattern', label: 'Lotus Pattern' }
+    ]
+  },
+  {
+    title: "Natural Elements",
+    borderColor: "border-sage-500",
+    themes: [
+      { id: 'ocean-waves', label: 'Ocean Waves' },
+      { id: 'forest-path', label: 'Forest Path' },
+      { id: 'garden-sanctuary', label: 'Garden Sanctuary' },
+      { id: 'mountain-vista', label: 'Mountain Vista' },
+      { id: 'bamboo-grove', label: 'Bamboo Grove' },
+      { id: 'flowing-stream', label: 'Flowing Stream' },
+      { id: 'moon-phases', label: 'Moon Phases' },
+      { id: 'tree-of-life', label: 'Tree of Life' }
+    ]
+  },
+  {
+    title: "Elemental Patterns",
+    borderColor: "border-emerald-700",
+    themes: [
+      { id: 'floating-clouds', label: 'Floating Clouds' },
+      { id: 'gentle-rain', label: 'Gentle Rain' },
+      { id: 'dancing-leaves', label: 'Dancing Leaves' },
+      { id: 'wind-patterns', label: 'Wind Patterns' },
+      { id: 'crystal-forms', label: 'Crystal Forms' },
+      { id: 'light-rays', label: 'Light Rays' }
+    ]
+  },
+  {
+    title: "Abstract Concepts",
+    borderColor: "border-gray-500",
+    themes: [
+      { id: 'flow-states', label: 'Flow States' },
+      { id: 'energy-fields', label: 'Energy Fields' },
+      { id: 'infinity-paths', label: 'Infinity Paths' },
+      { id: 'balance-forms', label: 'Balance Forms' },
+      { id: 'ripple-effects', label: 'Ripple Effects' },
+      { id: 'mindful-spaces', label: 'Mindful Spaces' }
+    ]
+  },
+  {
+    title: "Emotional Healing",
+    borderColor: "border-gray-400",
+    themes: [
+      { id: 'comfort-cocoon', label: 'Comfort Cocoon' },
+      { id: 'peace-portal', label: 'Peace Portal' },
+      { id: 'serenity-spirals', label: 'Serenity Spirals' },
+      { id: 'gratitude-garden', label: 'Gratitude Garden' },
+      { id: 'joy-bubbles', label: 'Joy Bubbles' },
+      { id: 'release-ribbons', label: 'Release Ribbons' }
+    ]
+  }
+];
 
 const emotionalQualities = {
   'anxious': {
@@ -172,6 +237,32 @@ export function ColoringGenerator() {
   const [selectedAspectRatio, setAspectRatio] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+
+  // Save form state to localStorage when it changes
+  useEffect(() => {
+    const formState = {
+      description,
+      selectedEmotion,
+      selectedTheme,
+      selectedComplexity,
+      selectedAspectRatio
+    };
+    localStorage.setItem('coloringFormState', JSON.stringify(formState));
+  }, [description, selectedEmotion, selectedTheme, selectedComplexity, selectedAspectRatio]);
+
+  // Load form state from localStorage on component mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('coloringFormState');
+    if (savedState) {
+      const formState = JSON.parse(savedState);
+      setDescription(formState.description);
+      setEmotion(formState.selectedEmotion);
+      setTheme(formState.selectedTheme);
+      setComplexity(formState.selectedComplexity);
+      setAspectRatio(formState.selectedAspectRatio);
+    }
+  }, []);
 
   // Data
   const emotions: Emotion[] = [
@@ -193,27 +284,6 @@ export function ColoringGenerator() {
     { id: "square", label: "Square", value: "1:1" },
     { id: "portrait", label: "Portrait", value: "2:3" },
     { id: "landscape", label: "Landscape", value: "3:2" },
-  ];
-
-  const themeCategories: ThemeCategory[] = [
-    {
-      title: "Traditional Mindfulness",
-      themes: [
-        { id: "mandala", label: "Mandala" },
-        { id: "zen-circle", label: "Zen Circle" },
-        { id: "sacred-geometry", label: "Sacred Geometry" },
-        { id: "lotus-pattern", label: "Lotus Pattern" }
-      ]
-    },
-    {
-      title: "Natural Elements",
-      themes: [
-        { id: "ocean-waves", label: "Ocean Waves" },
-        { id: "forest-path", label: "Forest Path" },
-        { id: "garden-sanctuary", label: "Garden Sanctuary" },
-        { id: "mountain-vista", label: "Mountain Vista" }
-      ]
-    }
   ];
 
   const faqItems: FAQItem[] = [
@@ -276,8 +346,8 @@ export function ColoringGenerator() {
     aspectRatio: string;
     description?: string;
   }) => {
-    const themeCategory = themeCategories.find((cat: ThemeCategory) => 
-      cat.themes.some((t: Theme) => t.id === theme)
+    const themeCategory = themeCategories.find(cat => 
+      cat.themes.some(t => t.id === theme)
     )?.title.toLowerCase().replace(/\s+/g, '-') || '';
 
     const emotionalState = emotionalStates[emotion as keyof typeof emotionalStates];
@@ -319,6 +389,12 @@ export function ColoringGenerator() {
   };
 
   const handleGenerate = async () => {
+    // Validate all required fields
+    if (!selectedEmotion || !selectedTheme || !selectedComplexity || !selectedAspectRatio) {
+      alert('Please select all required options (emotion, theme, complexity, and format)');
+      return;
+    }
+
     try {
       setIsLoading(true)
       
@@ -332,7 +408,7 @@ export function ColoringGenerator() {
       
       console.log('Frontend - Sending prompt:', structuredPrompt);
       
-      const response = await fetch('/api/generate', {
+      const response = await fetch('/api/create/coloring', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -344,20 +420,40 @@ export function ColoringGenerator() {
         }),
       })
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
       if (!response.ok) {
-        const error = await response.json()
-        if (response.status === 401) {
-          throw new Error('Please sign in to generate images')
-        } else if (response.status === 402) {
-          throw new Error('Insufficient credits. Please purchase more credits or subscribe.')
-        } else {
-          throw new Error(error.error || 'Failed to generate image')
+        try {
+          const error = JSON.parse(responseText);
+          if (response.status === 401) {
+            // Show login dialog instead of redirecting
+            setShowLoginDialog(true);
+            return;
+          } else if (response.status === 402) {
+            throw new Error('Insufficient credits. Please purchase more credits or subscribe.')
+          } else {
+            throw new Error(error.error || 'Failed to generate image')
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+          throw new Error(`Server error: ${responseText.substring(0, 100)}...`);
         }
       }
 
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      setImageUrl(url)
+      try {
+        const data = JSON.parse(responseText);
+        if (!data.imageUrl) {
+          throw new Error('No image URL received')
+        }
+        setImageUrl(data.imageUrl)
+      } catch (parseError) {
+        console.error('Error parsing success response:', parseError);
+        throw new Error('Invalid response format from server');
+      }
 
     } catch (error) {
       console.error('Error:', error)
@@ -367,31 +463,56 @@ export function ColoringGenerator() {
     }
   }
 
-  const handleDownloadPNG = () => {
-    const link = document.createElement('a')
-    link.href = imageUrl
-    link.download = 'coloring-page.png'
-    link.click()
+  const handleDownloadPNG = async () => {
+    if (!imageUrl) return;
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mindful-coloring-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download image');
+    }
   }
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!imageUrl) return;
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const img = document.createElement('img');
+      img.crossOrigin = "anonymous";
+      
+      const loadImage = new Promise((resolve, reject) => {
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = URL.createObjectURL(blob);
+      });
 
-    const img = document.createElement('img');
-    img.crossOrigin = "anonymous";
-    img.src = imageUrl;
-
-    img.onload = () => {
+      const loadedImg = await loadImage as HTMLImageElement;
+      
       const options: JsPDFOptions = {
         orientation: selectedAspectRatio === "2:3" ? "portrait" : "landscape",
         unit: "px",
-        format: [img.width, img.height]
+        format: [loadedImg.width, loadedImg.height]
       };
 
       const pdf = new jsPDF(options);
-      pdf.addImage(img, "PNG", 0, 0, img.width, img.height);
-      pdf.save("coloring-page.pdf");
-    };
+      pdf.addImage(loadedImg, "PNG", 0, 0, loadedImg.width, loadedImg.height);
+      pdf.save(`mindful-coloring-${Date.now()}.pdf`);
+      
+      URL.revokeObjectURL(loadedImg.src);
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('Failed to generate PDF');
+    }
   };
 
   return (
@@ -549,15 +670,18 @@ export function ColoringGenerator() {
                         src={imageUrl}
                         alt="Generated coloring page"
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-contain p-4"
                       />
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-black/50 backdrop-blur-sm">
+                      <DialogTitle className="sr-only">Preview Coloring Page</DialogTitle>
                       <div className="relative w-full h-[90vh] bg-white rounded-lg p-4">
                         <Image
                           src={imageUrl}
-                          alt="Generated coloring page"
+                          alt="Generated coloring page preview"
                           fill
+                          sizes="95vw"
                           className="object-contain"
                           priority
                         />
@@ -611,6 +735,25 @@ export function ColoringGenerator() {
           </div>
         </div>
       </div>
+
+      {/* Login Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>Sign in to Continue</DialogTitle>
+          <div className="text-center space-y-4 py-4">
+            <p className="text-gray-600">Please sign in to generate coloring pages.</p>
+            <Button 
+              onClick={() => {
+                const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                window.location.href = `/login?returnUrl=${returnUrl}`;
+              }}
+              className="w-full bg-[#88B3BA] hover:bg-[#88B3BA]/90"
+            >
+              Sign In
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

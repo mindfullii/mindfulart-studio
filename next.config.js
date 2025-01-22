@@ -5,7 +5,8 @@ const nextConfig = {
     domains: [
       'lh3.googleusercontent.com',
       'images.ctfassets.net',
-      'downloads.ctfassets.net'
+      'downloads.ctfassets.net',
+      'replicate.delivery'
     ],
   },
   env: {
