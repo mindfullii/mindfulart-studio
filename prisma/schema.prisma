@@ -25,11 +25,10 @@ enum PlanType {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String    @unique
-  password      String?
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
-  credits       Int       @default(10)
+  credits       Int       @default(10)  // 初始赠送10个积分
   isSubscribed  Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -120,11 +119,11 @@ model VerificationToken {
 model CreditHistory {
   id          String   @id @default(cuid())
   userId      String
-  amount      Int
-  type        String   // 'subscription' | 'purchase' | 'welcome' | 'used'
-  description String
+  amount      Int      // 正数表示增加，负数表示消费
+  type        String   // 'welcome' | 'purchase' | 'usage' | 'subscription'
+  description String?
   createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

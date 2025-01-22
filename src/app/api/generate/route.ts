@@ -1,12 +1,47 @@
 import { NextResponse } from 'next/server'
 import Replicate from 'replicate'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth.config'
+import { prisma } from '@/lib/prisma'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 })
 
+const COST_PER_GENERATION = 1;
+
 export async function POST(request: Request) {
   try {
+    // Get user session
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Check user credits
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { credits: true, isSubscribed: true }
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // If user is not subscribed and has insufficient credits
+    if (!user.isSubscribed && user.credits < COST_PER_GENERATION) {
+      return NextResponse.json(
+        { error: 'Insufficient credits' },
+        { status: 402 }
+      )
+    }
+
     const { prompt, aspectRatio, complexity } = await request.json()
 
     // Add complexity to the prompt
@@ -32,6 +67,24 @@ export async function POST(request: Request) {
     const imageUrl = output[0]
     if (!imageUrl) {
       throw new Error('No image generated')
+    }
+
+    // Deduct credits if user is not subscribed
+    if (!user.isSubscribed) {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { credits: user.credits - COST_PER_GENERATION }
+      })
+
+      // Record credit usage
+      await prisma.creditHistory.create({
+        data: {
+          userId: session.user.id,
+          amount: -COST_PER_GENERATION,
+          type: 'usage',
+          description: 'Generated coloring page'
+        }
+      })
     }
 
     // Fetch the image and convert it to a blob

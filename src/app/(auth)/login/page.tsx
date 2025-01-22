@@ -13,6 +13,20 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<AuthTab>('signin');
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      await signIn('google', {
+        callbackUrl: '/',
+        redirect: true,
+      });
+    } catch (error) {
+      console.error('Google sign in error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Left: Form */}
@@ -58,7 +72,8 @@ export default function AuthPage() {
           <Button
             variant="outline"
             className="w-full justify-center font-mono"
-            onClick={() => signIn('google')}
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
           >
             <Image
               src="/icons/google.svg"
@@ -67,7 +82,7 @@ export default function AuthPage() {
               height={20}
               className="mr-2"
             />
-            Continue with Google
+            {isLoading ? 'Signing in...' : 'Continue with Google'}
           </Button>
 
           {/* Divider */}

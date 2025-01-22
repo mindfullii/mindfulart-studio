@@ -345,7 +345,14 @@ export function ColoringGenerator() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to generate image')
+        const error = await response.json()
+        if (response.status === 401) {
+          throw new Error('Please sign in to generate images')
+        } else if (response.status === 402) {
+          throw new Error('Insufficient credits. Please purchase more credits or subscribe.')
+        } else {
+          throw new Error(error.error || 'Failed to generate image')
+        }
       }
 
       const blob = await response.blob()
@@ -354,7 +361,7 @@ export function ColoringGenerator() {
 
     } catch (error) {
       console.error('Error:', error)
-      alert('Failed to generate image')
+      alert(error instanceof Error ? error.message : 'Failed to generate image')
     } finally {
       setIsLoading(false)
     }
@@ -520,6 +527,7 @@ export function ColoringGenerator() {
             >
               {isLoading ? "Generating..." : "Generate Coloring Page"}
             </Button>
+            <p className="text-center text-sm text-gray-500 mt-2">1 creation costs 1 credit</p>
           </div>
 
           {/* Right Column - Preview & FAQ Section */}
