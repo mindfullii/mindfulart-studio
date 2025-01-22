@@ -229,38 +229,36 @@ function analyzeUserInput(description: string): {
   };
 }
 
-export function ColoringGenerator() {
-  const [description, setDescription] = useState("");
-  const [selectedEmotion, setEmotion] = useState<string>("");
-  const [selectedTheme, setTheme] = useState<string>("");
-  const [selectedComplexity, setComplexity] = useState<string>("");
-  const [selectedAspectRatio, setAspectRatio] = useState<string>("");
+export default function ColoringGenerator() {
+  const [description, setDescription] = useState('');
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [selectedComplexity, setSelectedComplexity] = useState<string | null>(null);
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [showLoginDialog, setShowLoginDialog] = useState(false);
 
-  // Save form state to localStorage when it changes
+  // Load saved state when component mounts
   useEffect(() => {
-    const formState = {
-      description,
-      selectedEmotion,
-      selectedTheme,
-      selectedComplexity,
-      selectedAspectRatio
-    };
-    localStorage.setItem('coloringFormState', JSON.stringify(formState));
-  }, [description, selectedEmotion, selectedTheme, selectedComplexity, selectedAspectRatio]);
-
-  // Load form state from localStorage on component mount
-  useEffect(() => {
-    const savedState = localStorage.getItem('coloringFormState');
+    const savedState = localStorage.getItem('coloringGeneratorState');
     if (savedState) {
-      const formState = JSON.parse(savedState);
-      setDescription(formState.description);
-      setEmotion(formState.selectedEmotion);
-      setTheme(formState.selectedTheme);
-      setComplexity(formState.selectedComplexity);
-      setAspectRatio(formState.selectedAspectRatio);
+      const { 
+        description, 
+        selectedEmotion, 
+        selectedTheme, 
+        selectedComplexity, 
+        selectedAspectRatio 
+      } = JSON.parse(savedState);
+      
+      setDescription(description || '');
+      setSelectedEmotion(selectedEmotion);
+      setSelectedTheme(selectedTheme);
+      setSelectedComplexity(selectedComplexity);
+      setSelectedAspectRatio(selectedAspectRatio);
+      
+      // Clear the saved state after restoring it
+      localStorage.removeItem('coloringGeneratorState');
     }
   }, []);
 
@@ -389,6 +387,16 @@ export function ColoringGenerator() {
   };
 
   const handleGenerate = async () => {
+    // Save current state before attempting to generate
+    const stateToSave = {
+      description,
+      selectedEmotion,
+      selectedTheme,
+      selectedComplexity,
+      selectedAspectRatio
+    };
+    localStorage.setItem('coloringGeneratorState', JSON.stringify(stateToSave));
+
     // Validate all required fields
     if (!selectedEmotion || !selectedTheme || !selectedComplexity || !selectedAspectRatio) {
       alert('Please select all required options (emotion, theme, complexity, and format)');
@@ -560,7 +568,7 @@ export function ColoringGenerator() {
                 {emotions.map((emotion) => (
                   <Button
                     key={emotion.id}
-                    onClick={() => setEmotion(emotion.id)}
+                    onClick={() => setSelectedEmotion(emotion.id)}
                     variant={emotion.id === selectedEmotion ? "default" : "outline"}
                     className={cn(
                       "font-['Space_Mono'] text-[14px] font-normal tracking-[0.02em]",
@@ -586,7 +594,7 @@ export function ColoringGenerator() {
                         {category.themes.map((theme) => (
                           <Button
                             key={theme.id}
-                            onClick={() => setTheme(theme.id)}
+                            onClick={() => setSelectedTheme(theme.id)}
                             variant={theme.id === selectedTheme ? "default" : "outline"}
                             className={cn(
                               "font-['Space_Mono'] text-[14px] font-normal tracking-[0.02em]",
@@ -609,7 +617,7 @@ export function ColoringGenerator() {
                 {complexityOptions.map((option) => (
                   <Button
                     key={option.id}
-                    onClick={() => setComplexity(option.id)}
+                    onClick={() => setSelectedComplexity(option.id)}
                     variant={option.id === selectedComplexity ? "default" : "outline"}
                     className={cn(
                       "font-['Space_Mono'] flex-1 text-[14px] font-normal tracking-[0.02em]",
@@ -628,7 +636,7 @@ export function ColoringGenerator() {
                 {aspectRatios.map((ratio) => (
                   <Button
                     key={ratio.id}
-                    onClick={() => setAspectRatio(ratio.value)}
+                    onClick={() => setSelectedAspectRatio(ratio.value)}
                     variant={selectedAspectRatio === ratio.value ? "default" : "outline"}
                     className={cn(
                       "font-['Space_Mono'] flex-1 text-[14px] font-normal tracking-[0.02em]",

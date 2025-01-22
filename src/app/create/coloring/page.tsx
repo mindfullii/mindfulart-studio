@@ -1,4 +1,4 @@
-import { ColoringGenerator } from '@/components/create/coloring/ColoringGenerator'
+import ColoringGenerator from '@/components/create/coloring/ColoringGenerator'
 
 export default function ColoringPage() {
   return (

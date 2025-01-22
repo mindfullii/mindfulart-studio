@@ -16,8 +16,12 @@ export default function AuthPage() {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      // Get returnUrl from URL parameters
+      const searchParams = new URLSearchParams(window.location.search);
+      const returnUrl = searchParams.get('returnUrl') || '/';
+      
       await signIn('google', {
-        callbackUrl: '/',
+        callbackUrl: returnUrl,
         redirect: true,
       });
     } catch (error) {

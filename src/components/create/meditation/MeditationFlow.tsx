@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Waves, Maximize2, X } from 'lucide-react';
 import {
@@ -25,7 +25,7 @@ interface Emotions {
   [key: string]: EmotionData;
 }
 
-function MeditationFlow() {
+const MeditationFlow = () => {
   const [currentStep, setCurrentStep] = useState<'emotion' | 'theme' | 'generate'>('emotion');
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
@@ -35,6 +35,25 @@ function MeditationFlow() {
   
   const { data: session } = useSession();
   const router = useRouter();
+
+  // Load saved state when component mounts
+  useEffect(() => {
+    const savedState = localStorage.getItem('meditationFlowState');
+    if (savedState) {
+      const { 
+        selectedEmotion, 
+        selectedTheme, 
+        currentStep 
+      } = JSON.parse(savedState);
+      
+      setSelectedEmotion(selectedEmotion);
+      setSelectedTheme(selectedTheme);
+      setCurrentStep(currentStep);
+      
+      // Clear the saved state after restoring it
+      localStorage.removeItem('meditationFlowState');
+    }
+  }, []);
 
   const emotions: Emotions = {
     'Anxious': {
@@ -86,6 +105,14 @@ function MeditationFlow() {
   };
 
   const generateImage = async (emotion: string, theme: string) => {
+    // Save current state before attempting to generate
+    const stateToSave = {
+      selectedEmotion,
+      selectedTheme,
+      currentStep
+    };
+    localStorage.setItem('meditationFlowState', JSON.stringify(stateToSave));
+
     try {
       const prompt = `A serene and ethereal ${theme.toLowerCase()} scene for meditation. Artistic, dreamlike quality with soft, harmonious colors. ${emotion.toLowerCase()} mood. Minimalist composition, abstract elements, zen atmosphere. High-end digital art, peaceful and calming, masterful lighting. Style of a fine art painting.`;
 
@@ -345,6 +372,6 @@ function MeditationFlow() {
       </div>
     </div>
   );
-}
+};
 
 export default MeditationFlow; 
