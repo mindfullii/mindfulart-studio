@@ -28,6 +28,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  password      String?
   credits       Int       @default(10)  // 初始赠送10个积分
   isSubscribed  Boolean   @default(false)
   createdAt     DateTime  @default(now())
@@ -80,6 +81,7 @@ model Artwork {
   tags        String[]
   downloads   Int       @default(0)
   createdAt   DateTime  @default(now())
+  type        String    @default("coloring") // 'vision', 'coloring', 'meditation'
 }
 
 model Subscription {

@@ -27,7 +27,7 @@ const menuItems: MenuItem[] = [
         label: 'Mindful Coloring Pages',
         href: '/explore/mindfulcoloringpages',
         description: 'Find peace in mindful coloring',
-        image: '/images/nav/coloring.jpg'
+        image: '/images/nav/coloring.webp'
       },
       {
         label: 'Visual Journal Artworks',
@@ -48,19 +48,19 @@ const menuItems: MenuItem[] = [
     children: [
       {
         label: 'Mindful Coloring',
-        href: '/create/mindfulcoloring',
+        href: '/create/coloring',
         description: 'Create your own mindful coloring experience',
         image: '/images/nav/create-coloring.jpg'
       },
       {
         label: 'Meditation Visuals',
-        href: '/create/meditationvisuals',
+        href: '/create/meditation',
         description: 'Generate calming meditation visuals',
         image: '/images/nav/meditation.jpg'
       },
       {
         label: 'Inner Vision',
-        href: '/create/innervision',
+        href: '/create/vision',
         description: 'Transform your thoughts into art',
         image: '/images/nav/vision.jpg'
       }

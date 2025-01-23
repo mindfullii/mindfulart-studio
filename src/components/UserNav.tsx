@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
 import { Button } from '@/components/ui/Button';
-import { CreditCardIcon, UserIcon, LogOutIcon, CoinsIcon } from 'lucide-react';
+import { CreditCardIcon, UserIcon, LogOutIcon, CoinsIcon, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar';
 
@@ -47,6 +47,12 @@ export function UserNav({ user }: UserNavProps) {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link href="/account" className="w-full flex items-center">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Account Details</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/dashboard" className="w-full flex items-center">
               <UserIcon className="mr-2 h-4 w-4" />

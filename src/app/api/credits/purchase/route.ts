@@ -4,9 +4,10 @@ import { authOptions } from '@/lib/auth.config';
 import { stripe } from '@/lib/stripe';
 
 const CREDIT_PRICES = {
-  50: 'price_1Qi0xxCWmHrjozclABCDEFGH',  // 替换为你的实际价格 ID
-  100: 'price_1Qi0xxCWmHrjozclIJKLMNOP',
-  200: 'price_1Qi0xxCWmHrjozclQRSTUVWX',
+  100: process.env.STRIPE_CREDIT_100_PRICE_ID,
+  250: process.env.STRIPE_CREDIT_250_PRICE_ID,
+  600: process.env.STRIPE_CREDIT_600_PRICE_ID,
+  1500: process.env.STRIPE_CREDIT_1500_PRICE_ID,
 };
 
 export async function POST(req: Request) {

@@ -13,9 +13,9 @@ export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#F5F7F6] border-b border-gray-200/60">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200/60">
       <Container size="wide">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           <MainNav />
           <div className="flex items-center">
             {status === 'loading' ? (

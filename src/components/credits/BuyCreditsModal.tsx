@@ -1,97 +1,103 @@
 'use client';
 
 import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { toast } from 'sonner';
+import { Spinner } from '@/components/ui/Spinner';
 
-type CreditOption = {
-  credits: number;
-  hours: string;
-  price: number;
-};
-
-const creditPackages = [
-  {
-    name: '1 Hour',
-    credits: 100,
-    price: 4.00,
-  },
-  {
-    name: '2 Hours',
-    credits: 250,
-    price: 8.00,
-  },
-  {
-    name: '5 Hours',
-    credits: 600,
-    price: 20.00,
-  },
-  {
-    name: '12 Hours',
-    credits: 1500,
-    price: 48.00,
-  }
+const CREDIT_OPTIONS = [
+  { amount: 100, price: 4.00, hours: '1 Hour' },
+  { amount: 250, price: 8.00, hours: '2 Hours' },
+  { amount: 600, price: 20.00, hours: '5 Hours' },
+  { amount: 1500, price: 48.00, hours: '12 Hours' },
 ];
 
-type Props = {
+interface BuyCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (amount: number) => void;
-};
+}
 
-export function BuyCreditsModal({ isOpen, onClose, onSelect }: Props) {
-  const [selectedOption, setSelectedOption] = useState<CreditOption | null>(null);
+export function BuyCreditsModal({ isOpen, onClose }: BuyCreditsModalProps) {
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (!isOpen) return null;
+  const handlePurchase = async () => {
+    if (!selectedAmount) return;
+
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/credits/purchase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credits: selectedAmount }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to initiate purchase');
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      toast.error('Failed to process purchase');
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-medium">Buy more Credits</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-
-        <p className="text-sm text-gray-600 mb-2">
-          Select amount of Credits
-        </p>
-        <p className="text-xs text-gray-500 mb-6">
-          You will be asked to confirm your purchase at the next step.
-        </p>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {creditPackages.map((option) => (
-            <button
-              key={option.credits}
-              onClick={() => setSelectedOption(option)}
-              className={`p-4 border rounded-lg text-center transition-colors
-                ${selectedOption?.credits === option.credits
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-primary/50'
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Buy Credits</DialogTitle>
+        </DialogHeader>
+        <div className="py-6">
+          <p className="text-text-secondary mb-6">
+            Select amount of Credits. You will be asked to confirm your purchase at the next step.
+          </p>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {CREDIT_OPTIONS.map((option) => (
+              <button
+                key={option.amount}
+                onClick={() => setSelectedAmount(option.amount)}
+                className={`p-4 rounded-lg border text-left transition-all ${
+                  selectedAmount === option.amount
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary'
                 }`}
-            >
-              <div className="text-sm font-medium mb-1">{option.hours}</div>
-              <div className="text-primary text-lg font-medium">
-                ${option.price.toFixed(2)}
+              >
+                <div className="font-heading mb-1">{option.hours}</div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm text-text-secondary">{option.amount} credits</span>
+                  <span className="font-mono">${option.price.toFixed(2)}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+          <Button
+            className="w-full"
+            disabled={!selectedAmount || isLoading}
+            onClick={handlePurchase}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Spinner className="h-4 w-4" />
+                <span>Processing...</span>
               </div>
-              <div className="text-xs text-gray-500">{option.credits} credits</div>
-            </button>
-          ))}
+            ) : (
+              `Buy ${selectedAmount || 0} credits for $${
+                CREDIT_OPTIONS.find(opt => opt.amount === selectedAmount)?.price.toFixed(2) || '0.00'
+              }`
+            )}
+          </Button>
         </div>
-
-        <Button
-          className="w-full"
-          disabled={!selectedOption}
-          onClick={() => selectedOption && onSelect(selectedOption.credits)}
-        >
-          {selectedOption
-            ? `Buy ${selectedOption.credits} credits for $${selectedOption.price.toFixed(2)}`
-            : 'Select an amount'
-          }
-        </Button>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 } 

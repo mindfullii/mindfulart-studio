@@ -4,14 +4,14 @@ import { authOptions } from '@/lib/auth.config';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // 获取用户的订阅信息
+    // Get the active subscription from database
     const subscription = await prisma.subscription.findFirst({
       where: {
         userId: session.user.id,
@@ -19,33 +19,38 @@ export async function POST() {
       },
     });
 
-    if (!subscription) {
+    if (!subscription?.stripeSubscriptionId) {
       return new NextResponse('No active subscription found', { status: 404 });
     }
 
-    // 取消 Stripe 订阅
-    await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+    // Cancel the subscription in Stripe
+    await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+      cancel_at_period_end: true,
+    });
 
-    // 更新数据库中的订阅状态
-    await prisma.$transaction([
-      prisma.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          status: 'canceled',
-          endDate: new Date(),
-        },
-      }),
-      prisma.user.update({
-        where: { id: session.user.id },
-        data: {
-          isSubscribed: false,
-        },
-      }),
-    ]);
+    // Update subscription status in database
+    await prisma.subscription.update({
+      where: {
+        id: subscription.id,
+      },
+      data: {
+        status: 'canceled',
+      },
+    });
 
-    return NextResponse.json({ success: true });
+    // Update user subscription status
+    await prisma.user.update({
+      where: {
+        id: session.user.id,
+      },
+      data: {
+        isSubscribed: false,
+      },
+    });
+
+    return new NextResponse(null, { status: 200 });
   } catch (error) {
-    console.error('Error canceling subscription:', error);
+    console.error('Error cancelling subscription:', error);
     return new NextResponse(
       error instanceof Error ? error.message : 'Internal error',
       { status: 500 }

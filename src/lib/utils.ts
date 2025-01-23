@@ -1,18 +1,20 @@
-import { type ClassValue, clsx } from "clsx";
+import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
 import crypto from 'crypto';
+
+type ClassValue = string | number | boolean | undefined | null | { [key: string]: boolean } | ClassValue[];
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(dateString: string) {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
+export function formatDate(date: Date | string | number): string {
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
-  }).format(date);
+  });
 }
 
 export function generateVerificationToken() {
