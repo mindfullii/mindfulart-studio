@@ -39,19 +39,37 @@ export async function POST(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    // 验证用户积分
-    const user = await prisma.user.findUnique({
+    // Get fresh user data and check credits before generation
+    const freshUser = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { credits: true, isSubscribed: true }
-    })
+      select: { credits: true }
+    });
 
-    if (!user) {
+    if (!freshUser) {
       return new NextResponse('User not found', { status: 404 })
     }
 
-    if (!user.isSubscribed && user.credits < COST_PER_GENERATION) {
+    // Check if user has enough credits (always required)
+    if (freshUser.credits < COST_PER_GENERATION) {
       return new NextResponse('Insufficient credits', { status: 402 })
     }
+
+    // Always deduct credits and record usage
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: session.user.id },
+        data: { credits: freshUser.credits - COST_PER_GENERATION }
+      }),
+      prisma.creditHistory.create({
+        data: {
+          userId: session.user.id,
+          amount: -COST_PER_GENERATION,
+          type: "USAGE",
+          description: "Generated vision artwork"
+        }
+      })
+    ]);
+    console.log("💰 Credits deducted. New balance:", freshUser.credits - COST_PER_GENERATION);
 
     const replicate = new Replicate({
       auth: process.env.REPLICATE_API_TOKEN ?? ''
@@ -109,14 +127,6 @@ export async function POST(request: Request) {
       
       const imageBuffer = Buffer.concat(chunks)
       
-      // 如果用户未订阅，扣除积分
-      if (!user.isSubscribed) {
-        await prisma.user.update({
-          where: { id: session.user.id },
-          data: { credits: user.credits - COST_PER_GENERATION }
-        })
-      }
-
       // 生成唯一的文件名
       const timestamp = Date.now()
       const filename = `generated_${timestamp}.png`
@@ -149,6 +159,7 @@ export async function POST(request: Request) {
           description: `Generated with style ${styleId} and aspect ratio ${formattedAspectRatio}`,
           prompt: fullPrompt,
           imageUrl: imageUrl,
+          type: "vision",
           tags: [`style_${styleId}`, `ratio_${formattedAspectRatio}`]
         }
       })

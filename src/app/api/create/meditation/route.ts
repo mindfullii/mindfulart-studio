@@ -108,6 +108,39 @@ export async function POST(req: Request) {
     console.log("📤 Replicate input:", input);
     try {
       console.log("🚀 Calling Replicate API with model: stability-ai/sdxl");
+
+      // Get fresh user data and check credits before generation
+      const freshUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { credits: true }
+      });
+
+      if (!freshUser) {
+        throw new Error("User not found");
+      }
+
+      // Check if user has enough credits (always required)
+      if (freshUser.credits < COST_PER_GENERATION) {
+        throw new Error("Insufficient credits");
+      }
+
+      // Always deduct credits and record usage
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: session.user.id },
+          data: { credits: freshUser.credits - COST_PER_GENERATION }
+        }),
+        prisma.creditHistory.create({
+          data: {
+            userId: session.user.id,
+            amount: -COST_PER_GENERATION,
+            type: "USAGE",
+            description: "Generated meditation artwork"
+          }
+        })
+      ]);
+      console.log("💰 Credits deducted. New balance:", freshUser.credits - COST_PER_GENERATION);
+
       const prediction = await replicate.predictions.create({
         version: "7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc",
         input: input
@@ -136,27 +169,20 @@ export async function POST(req: Request) {
         throw new Error("Invalid image URL from Replicate");
       }
 
-      // Deduct credits if user is not subscribed
-      if (!user.isSubscribed) {
-        await prisma.user.update({
-          where: { id: session.user.id },
-          data: { credits: user.credits - COST_PER_GENERATION }
-        });
-        console.log("💰 Credits deducted. New balance:", user.credits - COST_PER_GENERATION);
+      // Save the artwork to the database
+      await prisma.artwork.create({
+        data: {
+          userId: session.user.id,
+          title: prompt.slice(0, 100),
+          description: "Generated meditation visual",
+          prompt: prompt,
+          imageUrl: imageUrl,
+          type: "meditation",
+          tags: []
+        }
+      });
+      console.log("💾 Artwork saved to database");
 
-        // Record credit usage
-        await prisma.creditHistory.create({
-          data: {
-            userId: session.user.id,
-            amount: -COST_PER_GENERATION,
-            description: "Generated meditation visual",
-            type: "USAGE"
-          }
-        });
-        console.log("📝 Credit usage recorded");
-      }
-
-      console.log("🖼️ Generated image URL:", imageUrl);
       return NextResponse.json({ imageUrl });
     } catch (error) {
       console.error("❌ Replicate API error:", error);
