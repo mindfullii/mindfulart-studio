@@ -4,9 +4,7 @@ import { generatePrompt } from '@/app/create/vision/promptTemplates'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth.config'
 import { prisma } from '@/lib/prisma'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
-import { mkdir } from 'fs/promises'
+import { uploadToR2 } from "@/lib/storage"
 
 const COST_PER_GENERATION = 1
 
@@ -127,31 +125,14 @@ export async function POST(request: Request) {
       
       const imageBuffer = Buffer.concat(chunks)
       
-      // 生成唯一的文件名
+      // Generate unique filename
       const timestamp = Date.now()
-      const filename = `generated_${timestamp}.png`
-      const publicDir = join(process.cwd(), 'public')
-      const imageDir = join(publicDir, 'images', 'generated')
-      const filePath = join(imageDir, filename)
-      const imageUrl = `/images/generated/${filename}`
+      const filename = `vision_${timestamp}.png`
+      
+      // Upload to R2
+      const imageUrl = await uploadToR2(imageBuffer, filename)
 
-      // 确保目录存在
-      try {
-        await mkdir(imageDir, { recursive: true })
-      } catch (error) {
-        console.error('Failed to create directory:', error)
-      }
-
-      // 保存图片文件
-      try {
-        await writeFile(filePath, imageBuffer)
-        console.log('Image saved successfully at:', filePath)
-      } catch (error) {
-        console.error('Failed to save image:', error)
-        // 继续执行，即使保存失败也返回生成的图片
-      }
-
-      // 记录作品
+      // Save artwork to database
       await prisma.artwork.create({
         data: {
           userId: session.user.id,

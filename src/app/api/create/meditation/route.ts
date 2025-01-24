@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import Replicate from "replicate";
 import type { Session } from "next-auth";
+import { uploadToR2 } from "@/lib/storage";
 
 interface ExtendedSession extends Session {
   user: {
@@ -149,13 +150,13 @@ export async function POST(req: Request) {
       console.log("📥 Replicate prediction:", prediction);
 
       // Wait for the prediction to complete
-      let imageUrl = null;
-      while (!imageUrl) {
+      let output = null;
+      while (!output) {
         const status = await replicate.predictions.get(prediction.id);
         console.log("🔄 Prediction status:", status);
 
         if (status.status === "succeeded") {
-          imageUrl = status.output?.[0];
+          output = status.output;
           break;
         } else if (status.status === "failed") {
           throw new Error("Image generation failed");
@@ -165,9 +166,23 @@ export async function POST(req: Request) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
+      if (!output?.[0] || typeof output[0] !== 'string' || !output[0].startsWith('http')) {
         throw new Error("Invalid image URL from Replicate");
       }
+
+      // Download image from Replicate
+      const replicateUrl = output[0];
+      const response = await fetch(replicateUrl);
+      if (!response.ok) {
+        throw new Error("Failed to download image from Replicate");
+      }
+
+      const imageBuffer = Buffer.from(await response.arrayBuffer());
+      
+      // Upload to R2
+      const timestamp = Date.now();
+      const filename = `meditation_${timestamp}.png`;
+      const imageUrl = await uploadToR2(imageBuffer, filename);
 
       // Save the artwork to the database
       await prisma.artwork.create({

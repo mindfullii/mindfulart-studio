@@ -2,11 +2,28 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      'lh3.googleusercontent.com',
-      'images.ctfassets.net',
-      'downloads.ctfassets.net',
-      'replicate.delivery'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'replicate.delivery',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-e1f86caa0538490c93d0298f702975c3.r2.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.r2.cloudflarestorage.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.ctfassets.net',
+      },
     ],
   },
   env: {

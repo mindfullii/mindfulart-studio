@@ -1,40 +1,25 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["referentialIntegrity"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  directUrl    = env("DIRECT_URL")
   relationMode = "prisma"
 }
 
-enum PlanType {
-  FREE
-  PRO
-  ENTERPRISE
-}
-
 model User {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?         @unique
   emailVerified DateTime?
   image         String?
+  credits       Int             @default(10)
+  isSubscribed  Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   password      String?
-  credits       Int       @default(10)  // 初始赠送10个积分
-  isSubscribed  Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // 关联
   accounts      Account[]
   sessions      Session[]
   transactions  Transaction[]
@@ -49,15 +34,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -71,43 +55,43 @@ model Session {
 }
 
 model Artwork {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String?
   imageUrl    String
   prompt      String?
   userId      String
-  user        User      @relation(fields: [userId], references: [id])
   tags        String[]
-  downloads   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  type        String    @default("coloring") // 'vision', 'coloring', 'meditation'
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+  type        String   @default("coloring")
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Subscription {
-  id            String    @id @default(cuid())
-  userId        String    @unique
-  user          User      @relation(fields: [userId], references: [id])
-  plan          String    // FREE_SOUL or PEACEFUL_MIND
-  status        String    // active, canceled, expired
-  billingCycle  String    // monthly or annually
-  startDate     DateTime  @default(now())
-  endDate       DateTime?
-  stripeCustomerId String?
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  plan                 String
+  status               String
+  billingCycle         String
+  startDate            DateTime  @default(now())
+  endDate              DateTime?
+  stripeCustomerId     String?
   stripeSubscriptionId String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
   id              String   @id @default(cuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id])
   amount          Float
   credits         Int
-  transactionType String   // CREDITS_PURCHASE, SUBSCRIPTION_PAYMENT
-  status          String   // SUCCESS, FAILED, PENDING
+  transactionType String
+  status          String
   createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
 }
 
 model VerificationToken {
@@ -121,11 +105,17 @@ model VerificationToken {
 model CreditHistory {
   id          String   @id @default(cuid())
   userId      String
-  amount      Int      // 正数表示增加，负数表示消费
-  type        String   // 'welcome' | 'purchase' | 'usage' | 'subscription'
+  amount      Int
+  type        String
   description String?
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+enum PlanType {
+  FREE
+  PRO
+  ENTERPRISE
 }

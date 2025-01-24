@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import Replicate from "replicate";
 import type { Session } from "next-auth";
+import { uploadToR2 } from "@/lib/storage";
 
 interface ExtendedSession extends Session {
   user: {
@@ -157,9 +158,19 @@ export async function POST(req: Request) {
         throw new Error("Invalid image URL from Replicate");
       }
 
-      // Return the direct image URL from Replicate
-      const imageUrl = output[0];
-      console.log("🖼️ Generated image URL:", imageUrl);
+      // Download image from Replicate
+      const replicateUrl = output[0];
+      const response = await fetch(replicateUrl);
+      if (!response.ok) {
+        throw new Error("Failed to download image from Replicate");
+      }
+
+      const imageBuffer = Buffer.from(await response.arrayBuffer());
+      
+      // Upload to R2
+      const timestamp = Date.now();
+      const filename = `coloring_${timestamp}.png`;
+      const imageUrl = await uploadToR2(imageBuffer, filename);
 
       // Save the artwork to the database
       await prisma.artwork.create({

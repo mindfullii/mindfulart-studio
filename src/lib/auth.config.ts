@@ -1,8 +1,7 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { NextAuthOptions } from "next-auth";
 import type { Session, User } from "next-auth";
 import type { JWT } from "next-auth/jwt";
-import type { AdapterUser } from "@auth/core/adapters";
 import Google from "next-auth/providers/google";
 import { prisma } from "./prisma";
 
@@ -26,7 +25,7 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
   session: {
-    strategy: "jwt" as const,
+    strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
@@ -35,8 +34,8 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     }),
   ],
   callbacks: {
@@ -44,29 +43,14 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async redirect({ url, baseUrl }) {
-      // Check if there's a returnUrl in the URL
-      try {
-        const parsedUrl = new URL(url);
-        const returnUrl = parsedUrl.searchParams.get('returnUrl');
-        if (returnUrl) {
-          // Make sure the returnUrl is safe (starts with a slash and is a relative path)
-          if (returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
-            return `${baseUrl}${returnUrl}`;
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing URL:', error);
-      }
-
-      // If no valid returnUrl is found, handle the URL directly
-      if (url.startsWith('/')) {
+      // 如果是相对路径，添加baseUrl
+      if (url.startsWith("/")) {
         return `${baseUrl}${url}`;
       }
-      if (url.startsWith(baseUrl)) {
+      // 如果已经是完整URL，直接返回
+      else if (url.startsWith("http")) {
         return url;
       }
-
-      // Default fallback
       return baseUrl;
     },
     async jwt({ token, user }: { token: JWT; user?: User }) {
@@ -90,7 +74,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    async createUser({ user }: { user: AdapterUser }) {
+    async createUser({ user }) {
       // Give new users 10 free credits
       await prisma.user.update({
         where: { id: user.id },

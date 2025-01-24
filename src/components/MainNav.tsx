@@ -117,94 +117,98 @@ export function MainNav() {
   return (
     <>
       <nav className="relative">
-        <div className="max-w-7xl mx-auto px-0">
-          <div className="flex items-center h-20">
-            {/* Logo */}
-            <Link href="/" className="mr-20">
-              <img
-                src="/images/logo.svg"
-                alt="MindfulArt"
-                className="h-10 w-auto"
-                loading="eager"
-              />
-            </Link>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-[1fr_2fr_1fr] items-center h-[80px]">
+            {/* Left: Logo */}
+            <div className="pl-4 flex items-center">
+              <Link href="/" className="flex items-center">
+                <img
+                  src="/images/logo.svg"
+                  alt="MindfulArt"
+                  className="h-[70px] w-auto"
+                  loading="eager"
+                />
+              </Link>
+            </div>
 
-            {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-10">
-              {menuItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="relative"
-                  onMouseEnter={() => handleMouseEnter(item.label)}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {item.href ? (
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "font-space-mono text-[15px] tracking-[0.03em] transition-colors hover:text-primary/90",
-                        pathname === item.href && pathname !== '/'
-                          ? "text-primary"
-                          : "text-gray-800"
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button 
-                      className="font-space-mono text-[14px] tracking-[0.02em] font-normal text-gray-800 hover:text-primary/90 transition-colors"
-                    >
-                      {item.label}
-                    </button>
-                  )}
-
-                  {/* Dropdown Menu with AnimatePresence */}
-                  <AnimatePresence>
-                    {item.children && activeMenu === item.label && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-screen max-w-md px-2"
+            {/* Center: Navigation */}
+            <div className="flex justify-center items-center px-4">
+              <div className="hidden md:flex items-center space-x-14">
+                {menuItems.map((item) => (
+                  <div
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={() => handleMouseEnter(item.label)}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "font-space-mono text-[15px] tracking-[0.03em] transition-colors hover:text-primary/90",
+                          pathname === item.href && pathname !== '/'
+                            ? "text-primary"
+                            : "text-gray-800"
+                        )}
                       >
-                        <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
-                          <div className="relative grid gap-6 bg-white p-6 sm:gap-8">
-                            {item.children.map((child) => (
-                              <Link
-                                key={child.href}
-                                href={child.href}
-                                className="flex items-start p-3 -m-3 rounded-lg hover:bg-gray-50 transition ease-in-out duration-150"
-                              >
-                                {child.image && (
-                                  <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden mr-4">
-                                    <img
-                                      src={child.image}
-                                      alt=""
-                                      className="w-full h-full object-cover"
-                                      loading="lazy"
-                                    />
-                                  </div>
-                                )}
-                                <div>
-                                  <p className="text-base font-garamond text-gray-900">
-                                    {child.label}
-                                  </p>
-                                  {child.description && (
-                                    <p className="mt-1 text-sm font-quattrocento text-gray-500">
-                                      {child.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <button 
+                        className="font-space-mono text-[14px] tracking-[0.02em] font-normal text-gray-800 hover:text-primary/90 transition-colors"
+                      >
+                        {item.label}
+                      </button>
                     )}
-                  </AnimatePresence>
-                </div>
-              ))}
+
+                    {/* Dropdown Menu with AnimatePresence */}
+                    <AnimatePresence>
+                      {item.children && activeMenu === item.label && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute top-[52px] left-1/2 transform -translate-x-1/2 w-screen max-w-sm px-2"
+                        >
+                          <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
+                            <div className="relative grid gap-4 bg-white p-4">
+                              {item.children.map((child) => (
+                                <Link
+                                  key={child.href}
+                                  href={child.href}
+                                  className="flex items-start p-3 -m-3 rounded-lg hover:bg-gray-50 transition ease-in-out duration-150"
+                                >
+                                  {child.image && (
+                                    <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden mr-4">
+                                      <img
+                                        src={child.image}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                      />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-base font-garamond text-gray-900">
+                                      {child.label}
+                                    </p>
+                                    {child.description && (
+                                      <p className="mt-1 text-sm font-quattrocento text-gray-500">
+                                        {child.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Mobile Menu Button */}

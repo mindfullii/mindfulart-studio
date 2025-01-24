@@ -14,6 +14,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface EmotionData {
   description: string;
@@ -292,12 +293,14 @@ const MeditationFlow = () => {
                 ) : imageUrl ? (
                   <div className="space-y-4">
                     <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-                      <img
+                      <Image
                         key={imageUrl}
                         src={imageUrl}
                         alt="Generated meditation visual"
-                        className="w-full h-full object-contain"
+                        fill
+                        className="object-contain"
                         crossOrigin="anonymous"
+                        loading="eager"
                         onError={(e) => {
                           console.error('Image load error:', e);
                           const imgElement = e.target as HTMLImageElement;
@@ -310,7 +313,7 @@ const MeditationFlow = () => {
                             complete: imgElement.complete,
                             naturalSize: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
                           });
-                          setError('Failed to load the generated image');
+                          setError('Failed to load the generated image. Please try again.');
                         }}
                         onLoad={(e) => {
                           const imgElement = e.target as HTMLImageElement;

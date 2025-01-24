@@ -1,0 +1,5 @@
+[33mcommit d2fe82a704174d2e5bd19715235edd101750947d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: iDUNNO <idunno.ltd@gmail.com>
+Date:   Wed Jan 22 22:24:19 2025 -0800
+
+    refactor: update credit deduction logic and fix various issues
