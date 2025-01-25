@@ -1,31 +1,38 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { signIn } from 'next-auth/react';
-import { toast } from 'sonner';
+import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
-import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { GoogleIcon } from '@/components/icons/GoogleIcon';
+import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  defaultTab?: 'signin' | 'signup';
 }
 
-export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab);
+export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: ''
   });
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      await signIn('google', { callbackUrl: '/dashboard' });
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -79,132 +86,140 @@ export function AuthModal({ isOpen, onClose, defaultTab = 'signin' }: AuthModalP
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
         <div className="grid grid-cols-2">
-          {/* Form Section */}
-          <div className="p-6 flex flex-col min-h-[600px]">
-            <div className="flex-1 flex flex-col">
-              {/* Tabs */}
-              <div className="flex space-x-4 border-b mb-6">
-                <button
-                  onClick={() => setActiveTab('signin')}
-                  className={`pb-2 ${
-                    activeTab === 'signin'
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-500'
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setActiveTab('signup')}
-                  className={`pb-2 ${
-                    activeTab === 'signup'
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-500'
-                  }`}
-                >
-                  Sign Up
-                </button>
-              </div>
-
-              {/* Social Login */}
-              <div className="mb-6">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => signIn('google')}
-                >
-                  <GoogleIcon className="mr-2" />
-                  Continue with Google
-                </Button>
-              </div>
-
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with email
-                  </span>
-                </div>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-                <div className="flex-1 space-y-4">
-                  {activeTab === 'signup' && (
-                    <div className="space-y-2">
-                      <label htmlFor="name">Name</label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, name: e.target.value }))
-                        }
-                        required
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <label htmlFor="email">Email</label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, email: e.target.value }))
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="password">Password</label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, password: e.target.value }))
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* 底部固定部分 */}
-                <div className="space-y-4 mt-auto pt-4">
-                  {activeTab === 'signin' && (
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {/* 处理忘记密码 */}}
-                        className="font-space-mono text-[14px] tracking-[0.02em] text-primary hover:text-primary/90"
-                      >
-                        Forgot your password?
-                      </button>
-                    </div>
-                  )}
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading
-                      ? 'Loading...'
-                      : activeTab === 'signin'
-                      ? 'Sign In'
-                      : 'Sign Up'}
-                  </Button>
-                </div>
-              </form>
+          {/* Left Column - Value Proposition */}
+          <div className="bg-[#F8FAF9] p-6 flex flex-col justify-center min-h-[420px]">
+            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-lg">✨</span>
+            </div>
+            
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-3">
+              Join us to create your artwork
+            </h3>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600 text-center">
+                Sign in to unlock the full creative experience:
+              </p>
+              <ul className="space-y-1.5">
+                <li className="flex items-center text-gray-600">
+                  <span className="mr-2 text-base">✨</span>
+                  <span className="text-sm">Save your mindful artworks</span>
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="mr-2 text-base">📈</span>
+                  <span className="text-sm">Track your creative journey</span>
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="mr-2 text-base">🎨</span>
+                  <span className="text-sm">Get personalized recommendations</span>
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="mr-2 text-base">⭐</span>
+                  <span className="text-sm">Access premium features</span>
+                </li>
+              </ul>
             </div>
           </div>
 
-          {/* Image Section */}
-          <div className="relative">
-            <Image
-              src="/images/auth/auth-bg.jpg"
-              alt="Authentication visual"
-              className="object-cover"
-              fill
-            />
+          {/* Right Column - Auth Form */}
+          <div className="p-6 flex flex-col min-h-[420px]">
+            {/* Tabs */}
+            <div className="flex space-x-4 border-b mb-4">
+              <button
+                onClick={() => setActiveTab('signin')}
+                className={`pb-2 px-4 transition-colors ${
+                  activeTab === 'signin'
+                    ? 'border-b-2 border-[#6DB889] text-[#6DB889]'
+                    : 'text-gray-500'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setActiveTab('signup')}
+                className={`pb-2 px-4 transition-colors ${
+                  activeTab === 'signup'
+                    ? 'border-b-2 border-[#6DB889] text-[#6DB889]'
+                    : 'text-gray-500'
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+            
+            <div className="flex-1 flex flex-col">
+              <div className="space-y-4">
+                <button
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-lg px-4 py-2 border border-gray-200 transition-colors"
+                >
+                  <img
+                    src="/icons/google.svg"
+                    alt="Google"
+                    className="w-4 h-4"
+                  />
+                  Continue with Google
+                </button>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">
+                      Or continue with email
+                    </span>
+                  </div>
+                </div>
+
+                <div className="h-[180px] transition-all duration-200 ease-in-out">
+                  <form onSubmit={handleSubmit} className="space-y-2.5">
+                    {activeTab === 'signup' && (
+                      <Input
+                        placeholder="Name"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        required
+                      />
+                    )}
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Password"
+                      value={formData.password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
+                    
+                    {activeTab === 'signin' && (
+                      <div className="flex justify-end">
+                        <Link 
+                          href="/forgot-password"
+                          className="text-sm text-[#6DB889] hover:text-[#5CA978] transition-colors"
+                        >
+                          Forgot password?
+                        </Link>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full bg-[#6DB889] hover:bg-[#5CA978] text-white font-medium rounded-lg px-4 py-2 transition-colors mt-2"
+                    >
+                      {isLoading ? 'Loading...' : activeTab === 'signin' ? 'Sign In' : 'Sign Up'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>
