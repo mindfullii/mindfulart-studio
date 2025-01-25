@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import Replicate from "replicate";
 import type { Session } from "next-auth";
 import { uploadToR2 } from "@/lib/storage";
+import { transformInput } from "@/lib/mindful-coloring-prompt-system";
 
 interface ExtendedSession extends Session {
   user: {
@@ -74,19 +75,25 @@ export async function POST(req: Request) {
       });
     }
 
-    const { prompt } = requestData;
+    const { prompt: userPrompt } = requestData;
 
-    if (!prompt) {
+    if (!userPrompt) {
       return NextResponse.json({ error: "Prompt is required" }, { 
         status: 400
       });
     }
 
+    // Transform user input into mindful prompt
+    const { prompt: transformedPrompt, dimensions } = transformInput(userPrompt);
+    console.log("🎨 Original prompt:", userPrompt);
+    console.log("✨ Transformed prompt:", transformedPrompt);
+    console.log("📐 Selected dimensions:", dimensions);
+
     if (!process.env.REPLICATE_API_TOKEN) {
       throw new Error("Missing Replicate API token");
     }
 
-    console.log("🎨 Generating coloring image with prompt:", prompt);
+    console.log("🎨 Generating coloring image with prompt:", transformedPrompt);
     console.log("🔑 Using Replicate API token:", process.env.REPLICATE_API_TOKEN?.substring(0, 8) + "...");
     
     const replicate = new Replicate({
@@ -94,8 +101,10 @@ export async function POST(req: Request) {
     });
 
     const input = {
-      prompt: prompt,
-      negative_prompt: "ugly, blurry, poor quality, low quality, oversaturated, undersaturated"
+      prompt: transformedPrompt,
+      negative_prompt: "ugly, blurry, poor quality, low quality, oversaturated, undersaturated",
+      width: dimensions.width,
+      height: dimensions.height
     };
 
     console.log("📤 Replicate input:", input);
@@ -176,9 +185,9 @@ export async function POST(req: Request) {
       await prisma.artwork.create({
         data: {
           userId: session.user.id,
-          title: prompt.slice(0, 100),
+          title: transformedPrompt.slice(0, 100),
           description: "Generated coloring page",
-          prompt: prompt,
+          prompt: transformedPrompt,
           imageUrl: imageUrl,
           type: "COLORING",
           tags: [],

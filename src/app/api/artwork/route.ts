@@ -25,6 +25,8 @@ export async function GET() {
       select: {
         id: true,
         title: true,
+        description: true,
+        prompt: true,
         imageUrl: true,
         createdAt: true,
         type: true,
@@ -48,7 +50,9 @@ export async function GET() {
       
       return {
         ...artwork,
-        imageUrl
+        imageUrl,
+        description: artwork.description || '',
+        prompt: artwork.prompt || ''
       };
     });
     

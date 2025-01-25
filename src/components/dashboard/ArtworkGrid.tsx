@@ -12,6 +12,8 @@ type ArtworkType = 'VISION' | 'COLORING' | 'MEDITATION';
 type Artwork = {
   id: string;
   title: string;
+  description: string;
+  prompt: string;
   imageUrl: string;
   createdAt: string;
   type: ArtworkType;
@@ -39,16 +41,15 @@ export function ArtworkGrid() {
         }
         const data = await response.json();
         console.log('API Response:', data);
-        setArtworks(data.map((artwork: any) => {
-          console.log('Processing artwork:', artwork);
-          return {
-            id: artwork.id,
-            title: artwork.title,
-            imageUrl: artwork.imageUrl,
-            createdAt: artwork.createdAt,
-            type: artwork.type as ArtworkType,
-          };
-        }));
+        setArtworks(data.map((artwork: any) => ({
+          id: artwork.id,
+          title: artwork.title,
+          description: artwork.description || '',
+          prompt: artwork.prompt || '',
+          imageUrl: artwork.imageUrl,
+          createdAt: artwork.createdAt,
+          type: artwork.type as ArtworkType,
+        })));
       } catch (err) {
         console.error('Error details:', err);
         setError(err instanceof Error ? err.message : 'Failed to load artworks');
@@ -155,6 +156,7 @@ export function ArtworkGrid() {
 
       {selectedArtwork && (
         <ArtworkPreviewModal
+          isOpen={!!selectedArtwork}
           artwork={selectedArtwork}
           onClose={() => setSelectedArtwork(null)}
         />

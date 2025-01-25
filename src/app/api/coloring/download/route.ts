@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
+import { PDFDocument } from 'pdf-lib';
 
 export async function GET(request: Request) {
   try {
@@ -10,10 +11,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 从 URL 获取参数
+    // Get parameters from URL
     const url = new URL(request.url);
     const imageUrl = url.searchParams.get('url');
-    const format = url.searchParams.get('format')?.toLowerCase(); // 'png' 或 'pdf'
+    const format = url.searchParams.get('format')?.toLowerCase(); // 'png' or 'pdf'
 
     if (!imageUrl) {
       return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid format" }, { status: 400 });
     }
 
-    // 获取图片内容
+    // Fetch image content
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
       throw new Error('Failed to fetch image');
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
     const imageData = await imageResponse.blob();
     
-    // 如果是 PNG，直接返回
+    // If PNG, return directly
     if (format === 'png') {
       return new NextResponse(imageData, {
         headers: {
@@ -41,15 +42,44 @@ export async function GET(request: Request) {
       });
     }
 
-    // TODO: 如果是 PDF，需要转换
-    // 这里需要添加 PDF 转换的逻辑
-    // 可以使用 pdf-lib 或其他库来创建 PDF
+    // If PDF, convert the image
+    if (format === 'pdf') {
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
+      
+      // Convert blob to array buffer
+      const imageBytes = await imageData.arrayBuffer();
+      
+      // Embed the PNG image
+      const pngImage = await pdfDoc.embedPng(imageBytes);
+      
+      // Add a new page
+      const page = pdfDoc.addPage([pngImage.width, pngImage.height]);
+      
+      // Draw the image on the page
+      page.drawImage(pngImage, {
+        x: 0,
+        y: 0,
+        width: pngImage.width,
+        height: pngImage.height,
+      });
+      
+      // Save the PDF
+      const pdfBytes = await pdfDoc.save();
+      
+      return new NextResponse(pdfBytes, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="coloring_page.pdf"`,
+        },
+      });
+    }
 
-    return NextResponse.json({ error: "PDF format not implemented yet" }, { status: 501 });
-  } catch (error) {
+    return NextResponse.json({ error: "Invalid format" }, { status: 400 });
+  } catch (error: any) {
     console.error("Download failed:", error);
     return NextResponse.json(
-      { error: "Failed to download image" },
+      { error: error.message || "Failed to download image" },
       { status: 500 }
     );
   }

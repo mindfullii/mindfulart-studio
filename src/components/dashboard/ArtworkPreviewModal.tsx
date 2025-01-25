@@ -2,51 +2,74 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Download, X } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { Dialog, DialogContent } from "@/components/ui/Dialog";
+import { toast } from "sonner";
 
 interface ArtworkPreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
   artwork: {
     id: string;
     title: string;
+    description: string;
+    prompt: string;
     imageUrl: string;
-    createdAt: string;
+    type: string;
   };
-  onClose: () => void;
 }
 
-export function ArtworkPreviewModal({ artwork, onClose }: ArtworkPreviewModalProps) {
+export function ArtworkPreviewModal({
+  isOpen,
+  onClose,
+  artwork,
+}: ArtworkPreviewModalProps) {
   const [downloading, setDownloading] = useState(false);
 
-  const handleDownload = async () => {
+  const handleDownloadPNG = async () => {
     try {
-      setDownloading(true);
-      // 通过 API 下载图片
-      const response = await fetch('/api/artwork/download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ artworkId: artwork.id }),
-      });
-
+      const downloadUrl = `/api/coloring/download?url=${encodeURIComponent(artwork.imageUrl)}&format=png`;
+      
+      const response = await fetch(downloadUrl);
       if (!response.ok) {
         throw new Error('Failed to download image');
       }
 
-      // 获取 blob 数据
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${artwork.title}.png`;
+      link.download = 'coloring_page.png';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading image:', error);
-      alert('Failed to download image. Please try again.');
-    } finally {
-      setDownloading(false);
+      console.error('Error downloading PNG:', error);
+      toast.error('Failed to download PNG. Please try again.');
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const downloadUrl = `/api/coloring/download?url=${encodeURIComponent(artwork.imageUrl)}&format=pdf`;
+      
+      const response = await fetch(downloadUrl);
+      if (!response.ok) {
+        throw new Error('Failed to download PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'coloring_page.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Failed to download PDF. Please try again.');
     }
   };
 
@@ -69,63 +92,58 @@ export function ArtworkPreviewModal({ artwork, onClose }: ArtworkPreviewModalPro
   }, [onClose]);
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
-      onClick={handleBackgroundClick}
-    >
-      <div 
-        className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl"
-        onClick={e => e.stopPropagation()} // 防止点击内容区域时关闭
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors z-10"
-        >
-          <X className="h-6 w-6 text-gray-500" />
-        </button>
-
-        <div className="p-6">
-          {/* Image container */}
-          <div className="relative aspect-[16/9] w-full rounded-lg overflow-hidden mb-4">
-            <Image
-              src={artwork.imageUrl}
-              alt={artwork.title}
-              fill
-              className="object-contain"
-              sizes="(max-width: 896px) 100vw, 896px"
-              priority
-            />
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-6xl max-h-[90vh] p-6" title="Artwork Preview">
+        <div className="flex gap-8">
+          {/* Left: Image Preview */}
+          <div className="w-1/2">
+            <div className="relative h-[calc(90vh-3rem)] border border-gray-100 rounded-lg overflow-hidden">
+              <Image
+                src={artwork.imageUrl}
+                alt={artwork.title}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
           </div>
 
-          {/* Info and actions */}
-          <div className="flex items-center justify-between">
+          {/* Right: Information */}
+          <div className="w-1/2 space-y-6 overflow-y-auto pr-2">
+            {/* Title and Description */}
             <div>
-              <h3 className="text-xl font-medium text-gray-900">{artwork.title}</h3>
-              <p className="text-sm text-gray-500">{formatDate(artwork.createdAt)}</p>
-            </div>
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className={`flex items-center space-x-2 px-4 py-2 bg-[#6DB889] text-white rounded-lg hover:bg-[#5CA978] transition-colors ${
-                downloading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {downloading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Downloading...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4" />
-                  <span>Download</span>
-                </>
+              <h2 className="text-2xl font-semibold mb-2">{artwork.title}</h2>
+              {artwork.description && (
+                <p className="text-gray-600">{artwork.description}</p>
               )}
-            </button>
+            </div>
+
+            {/* Prompt Information */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium mb-2">Mindful Prompt</h3>
+              <p className="text-gray-700 whitespace-pre-wrap">{artwork.prompt}</p>
+            </div>
+
+            {/* Download Buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleDownloadPNG}
+                className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download PNG</span>
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download PDF</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 } 
