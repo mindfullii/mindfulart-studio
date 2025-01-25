@@ -180,8 +180,9 @@ export async function POST(req: Request) {
           description: "Generated coloring page",
           prompt: prompt,
           imageUrl: imageUrl,
-          type: "coloring",
-          tags: []
+          type: "COLORING",
+          tags: [],
+          updatedAt: new Date(),
         }
       });
       console.log("💾 Artwork saved to database");

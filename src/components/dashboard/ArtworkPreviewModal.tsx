@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Download, X } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
@@ -7,16 +7,32 @@ interface ArtworkPreviewModalProps {
   artwork: {
     id: string;
     title: string;
-    image: string;
+    imageUrl: string;
     createdAt: string;
   };
   onClose: () => void;
 }
 
 export function ArtworkPreviewModal({ artwork, onClose }: ArtworkPreviewModalProps) {
+  const [downloading, setDownloading] = useState(false);
+
   const handleDownload = async () => {
     try {
-      const response = await fetch(artwork.image);
+      setDownloading(true);
+      // 通过 API 下载图片
+      const response = await fetch('/api/artwork/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ artworkId: artwork.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download image');
+      }
+
+      // 获取 blob 数据
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -28,6 +44,9 @@ export function ArtworkPreviewModal({ artwork, onClose }: ArtworkPreviewModalPro
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading image:', error);
+      alert('Failed to download image. Please try again.');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -70,7 +89,7 @@ export function ArtworkPreviewModal({ artwork, onClose }: ArtworkPreviewModalPro
           {/* Image container */}
           <div className="relative aspect-[16/9] w-full rounded-lg overflow-hidden mb-4">
             <Image
-              src={artwork.image}
+              src={artwork.imageUrl}
               alt={artwork.title}
               fill
               className="object-contain"
@@ -87,10 +106,22 @@ export function ArtworkPreviewModal({ artwork, onClose }: ArtworkPreviewModalPro
             </div>
             <button
               onClick={handleDownload}
-              className="flex items-center space-x-2 px-4 py-2 bg-[#6DB889] text-white rounded-lg hover:bg-[#5CA978] transition-colors"
+              disabled={downloading}
+              className={`flex items-center space-x-2 px-4 py-2 bg-[#6DB889] text-white rounded-lg hover:bg-[#5CA978] transition-colors ${
+                downloading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              <Download className="h-4 w-4" />
-              <span>Download</span>
+              {downloading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </>
+              )}
             </button>
           </div>
         </div>
