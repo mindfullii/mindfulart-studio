@@ -192,8 +192,10 @@ export async function POST(req: Request) {
           description: "Generated meditation visual",
           prompt: prompt,
           imageUrl: imageUrl,
-          type: "meditation",
-          tags: []
+          source: "USER",
+          type: "MEDITATION",
+          tags: [],
+          updatedAt: new Date()
         }
       });
       console.log("💾 Artwork saved to database");

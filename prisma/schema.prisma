@@ -12,14 +12,16 @@ datasource db {
 model User {
   id            String          @id @default(cuid())
   name          String?
+  displayName   String?
   email         String?         @unique
   emailVerified DateTime?
   image         String?
   credits       Int             @default(10)
   isSubscribed  Boolean         @default(false)
+  password      String?
+  role          UserRole        @default(USER)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-  password      String?
   accounts      Account[]
   sessions      Session[]
   transactions  Transaction[]
@@ -55,17 +57,28 @@ model Session {
 }
 
 model Artwork {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
   description String?
   imageUrl    String
   prompt      String?
-  userId      String
+  artistName  String?
+  sourceUrl   String?
+  featured    Boolean          @default(false)
   tags        String[]
-  downloads   Int      @default(0)
-  createdAt   DateTime @default(now())
-  type        String   @default("coloring")
-  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  downloads   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime
+  type        ArtworkType
+  source      ArtworkSource    @default(USER)
+  category    ArtworkCategory?
+  user        User             @relation(fields: [userId], references: [id])
+
+  @@index([category])
+  @@index([source])
+  @@index([type])
+  @@index([userId])
 }
 
 model Subscription {
@@ -114,8 +127,23 @@ model CreditHistory {
   @@index([userId])
 }
 
-enum PlanType {
-  FREE
-  PRO
-  ENTERPRISE
+enum ArtworkCategory {
+  COLORINGPAGES
+  COLORFULVISUAL
+}
+
+enum ArtworkSource {
+  USER
+  ADMIN
+}
+
+enum ArtworkType {
+  VISION
+  COLORING
+  MEDITATION
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }

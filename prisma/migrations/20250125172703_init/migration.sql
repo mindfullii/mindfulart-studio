@@ -1,16 +1,27 @@
 -- CreateEnum
-CREATE TYPE "PlanType" AS ENUM ('FREE', 'PRO', 'ENTERPRISE');
+CREATE TYPE "ArtworkCategory" AS ENUM ('COLORINGPAGES', 'COLORFULVISUAL');
+
+-- CreateEnum
+CREATE TYPE "ArtworkSource" AS ENUM ('USER', 'ADMIN');
+
+-- CreateEnum
+CREATE TYPE "ArtworkType" AS ENUM ('VISION', 'COLORING', 'MEDITATION');
+
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
 
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "name" TEXT,
-    "email" TEXT NOT NULL,
-    "password" TEXT,
+    "displayName" TEXT,
+    "email" TEXT,
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
     "credits" INTEGER NOT NULL DEFAULT 10,
     "isSubscribed" BOOLEAN NOT NULL DEFAULT false,
+    "password" TEXT,
+    "role" "UserRole" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -52,10 +63,17 @@ CREATE TABLE "Artwork" (
     "description" TEXT,
     "imageUrl" TEXT NOT NULL,
     "prompt" TEXT,
-    "userId" TEXT NOT NULL,
+    "artistName" TEXT,
+    "sourceUrl" TEXT,
+    "featured" BOOLEAN NOT NULL DEFAULT false,
     "tags" TEXT[],
+    "userId" TEXT NOT NULL,
     "downloads" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "type" "ArtworkType" NOT NULL,
+    "source" "ArtworkSource" NOT NULL DEFAULT 'USER',
+    "category" "ArtworkCategory",
 
     CONSTRAINT "Artwork_pkey" PRIMARY KEY ("id")
 );
@@ -90,6 +108,25 @@ CREATE TABLE "Transaction" (
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "VerificationToken" (
+    "identifier" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "CreditHistory" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "type" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "CreditHistory_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -100,4 +137,25 @@ CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provi
 CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
 -- CreateIndex
+CREATE INDEX "Artwork_category_idx" ON "Artwork"("category");
+
+-- CreateIndex
+CREATE INDEX "Artwork_source_idx" ON "Artwork"("source");
+
+-- CreateIndex
+CREATE INDEX "Artwork_type_idx" ON "Artwork"("type");
+
+-- CreateIndex
+CREATE INDEX "Artwork_userId_idx" ON "Artwork"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Subscription_userId_key" ON "Subscription"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
+
+-- CreateIndex
+CREATE INDEX "CreditHistory_userId_idx" ON "CreditHistory"("userId");

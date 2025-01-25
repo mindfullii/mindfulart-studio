@@ -12,6 +12,11 @@ export async function POST(req: Request) {
 
     const { priceId } = await req.json();
 
+    // Determine plan and billing cycle based on priceId
+    const isMonthly = priceId === process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID;
+    const plan = isMonthly ? 'monthly' : 'annual';
+    const billingCycle = isMonthly ? 'monthly' : 'annual';
+
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       billing_address_collection: 'auto',
@@ -28,6 +33,8 @@ export async function POST(req: Request) {
       metadata: {
         userId: session.user.id,
         type: 'subscription',
+        plan,
+        billingCycle,
       },
     });
 
