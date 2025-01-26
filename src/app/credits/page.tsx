@@ -12,7 +12,7 @@ interface CreditHistory {
   id: string;
   userId: string;
   amount: number;
-  type: 'subscription' | 'purchase' | 'welcome' | 'used';
+  type: 'subscription' | 'purchase' | 'welcome' | 'USAGE';
   description: string;
   createdAt: Date;
 }
@@ -33,6 +33,7 @@ export default function CreditsPage() {
       const response = await fetch('/api/credits/history');
       if (response.ok) {
         const data = await response.json();
+        console.log('Credit History Data:', data);
         setCreditHistory(data);
       }
     } catch (error) {
@@ -42,22 +43,21 @@ export default function CreditsPage() {
     }
   };
 
-  // 计算总积分和剩余积分
+  // 计算总积分（所有获得的积分之和）
   const totalCredits = creditHistory.reduce((sum, record) => {
-    if (record.type !== 'used') {
-      return sum + record.amount;
-    }
-    return sum;
-  }, 0);
-
-  const usedCredits = creditHistory.reduce((sum, record) => {
-    if (record.type === 'used') {
+    if (record.type !== 'USAGE') {
       return sum + Math.abs(record.amount);
     }
     return sum;
   }, 0);
 
-  const remainingCredits = totalCredits - usedCredits;
+  // 计算剩余积分
+  const remainingCredits = creditHistory.reduce((sum, record) => {
+    if (record.type === 'USAGE') {
+      return sum - Math.abs(record.amount); // 使用积分时减去
+    }
+    return sum + Math.abs(record.amount); // 获得积分时加上
+  }, 0);
 
   return (
     <Container>
@@ -111,9 +111,9 @@ export default function CreditsPage() {
                         </p>
                       </div>
                       <span className={`font-mono ${
-                        record.type === 'used' ? 'text-red-500' : 'text-green-500'
+                        record.type === 'USAGE' ? 'text-red-500' : 'text-green-500'
                       }`}>
-                        {record.type === 'used' ? '-' : '+'}
+                        {record.type === 'USAGE' ? '-' : '+'}
                         {Math.abs(record.amount)}
                       </span>
                     </div>

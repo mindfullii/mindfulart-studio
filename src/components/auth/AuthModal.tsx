@@ -85,46 +85,38 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
-        <div className="grid grid-cols-2">
-          {/* Left Column - Value Proposition */}
-          <div className="bg-[#F8FAF9] p-6 flex flex-col justify-center min-h-[420px]">
-            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-lg">✨</span>
+        <div className="grid grid-cols-2 gap-0">
+          {/* Left column */}
+          <div className="bg-background px-8 pt-[70px] pb-8 min-h-[500px] flex flex-col">
+            <div className="mb-4">
+              <span className="text-xl">✨</span>
             </div>
-            
-            <h3 className="text-lg font-semibold text-gray-900 text-center mb-3">
-              Join us to create your artwork
-            </h3>
-            
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600 text-center">
-                Sign in to unlock the full creative experience:
-              </p>
-              <ul className="space-y-1.5">
-                <li className="flex items-center text-gray-600">
-                  <span className="mr-2 text-base">✨</span>
-                  <span className="text-sm">Save your mindful artworks</span>
-                </li>
-                <li className="flex items-center text-gray-600">
-                  <span className="mr-2 text-base">📈</span>
-                  <span className="text-sm">Track your creative journey</span>
-                </li>
-                <li className="flex items-center text-gray-600">
-                  <span className="mr-2 text-base">🎨</span>
-                  <span className="text-sm">Get personalized recommendations</span>
-                </li>
-                <li className="flex items-center text-gray-600">
-                  <span className="mr-2 text-base">⭐</span>
-                  <span className="text-sm">Access premium features</span>
-                </li>
-              </ul>
-            </div>
+            <h2 className="text-2xl font-heading mb-4">Join us to create your artwork</h2>
+            <p className="text-text-secondary mb-6">Sign in to unlock the full creative experience:</p>
+            <ul className="space-y-4">
+              <li className="flex items-center gap-2">
+                <span className="text-amber-500">✨</span>
+                <span>Save your mindful artworks</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-purple-500">📝</span>
+                <span>Track your creative journey</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-pink-500">🎨</span>
+                <span>Get personalized recommendations</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-yellow-500">⭐</span>
+                <span>Access premium features</span>
+              </li>
+            </ul>
           </div>
 
-          {/* Right Column - Auth Form */}
-          <div className="p-6 flex flex-col min-h-[420px]">
+          {/* Right column */}
+          <div className="px-8 pt-[60px] pb-8 flex flex-col min-h-[500px]">
             {/* Tabs */}
-            <div className="flex space-x-4 border-b mb-4">
+            <div className="flex space-x-4 border-b mb-6">
               <button
                 onClick={() => setActiveTab('signin')}
                 className={`pb-2 px-4 transition-colors ${
@@ -173,7 +165,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   </div>
                 </div>
 
-                <div className="h-[180px] transition-all duration-200 ease-in-out">
+                <div className="h-[160px] transition-all duration-200 ease-in-out">
                   <form onSubmit={handleSubmit} className="space-y-2.5">
                     {activeTab === 'signup' && (
                       <Input
