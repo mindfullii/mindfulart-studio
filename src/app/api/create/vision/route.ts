@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import Replicate from "replicate"
-import { generatePrompt } from '@/app/create/vision/promptTemplates'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth.config'
 import { prisma } from '@/lib/prisma'
@@ -8,36 +7,56 @@ import { uploadToR2 } from "@/lib/storage"
 
 const COST_PER_GENERATION = 1
 
-// 定义Replicate输出类型
-type ReplicateOutput = string[] | { output: string[] } | null
-
-// 根据长宽比计算实际尺寸
-function calculateDimensions(aspectRatio: string): { width: number; height: number } {
-  const maxSize = 768;  // 最大边长
-  const [w, h] = aspectRatio.split(':').map(Number);
-  
-  if (h > w) {  // 竖向图片（如 9:16）
-    return {
-      width: Math.round(maxSize * (w / h)),
-      height: maxSize
-    };
-  } else {  // 横向图片
-    return {
-      width: maxSize,
-      height: Math.round(maxSize * (h / w))
-    };
+// Style-specific transformations
+const styleTransformations = {
+  tranquil_watercolor: {
+    prefix: 'Create a serene watercolor artwork with soft, flowing brushstrokes. ',
+    suffix: ' Use a gentle color palette with translucent layers that create a peaceful atmosphere.',
+    negativePrompt: 'harsh lines, bold colors, aggressive strokes, digital art style'
+  },
+  healing_ghibli: {
+    prefix: 'Create a heartwarming Ghibli-inspired illustration with attention to light and atmosphere. ',
+    suffix: ' Include subtle details that evoke warmth and nostalgia.',
+    negativePrompt: 'photorealistic, dark themes, harsh shadows, overly detailed'
+  },
+  romantic_impressionist: {
+    prefix: 'Paint an impressionist scene with emphasis on light and emotional atmosphere. ',
+    suffix: ' Focus on capturing the feeling of the moment through loose, expressive brushwork.',
+    negativePrompt: 'sharp details, flat colors, geometric shapes, modern style'
+  },
+  natural_botanical: {
+    prefix: 'Create a detailed botanical illustration with a focus on natural forms and organic patterns. ',
+    suffix: ' Maintain scientific accuracy while expressing the beauty of natural growth.',
+    negativePrompt: 'artificial elements, abstract forms, unnatural colors'
   }
+}
+
+// Calculate dimensions based on aspect ratio
+function calculateDimensions(aspectRatio: string): { width: number; height: number } {
+  const dimensions = {
+    '1:1': { width: 1024, height: 1024 },
+    '16:9': { width: 1344, height: 768 },
+    '9:16': { width: 768, height: 1344 },
+    '2:3': { width: 896, height: 1344 },
+    '3:2': { width: 1344, height: 896 },
+    '4:5': { width: 1024, height: 1280 },
+    '5:4': { width: 1280, height: 1024 },
+    '4:3': { width: 1344, height: 1008 },
+    '3:4': { width: 896, height: 1152 }
+  }
+
+  return dimensions[aspectRatio as keyof typeof dimensions] || { width: 1024, height: 1024 }
 }
 
 export async function POST(request: Request) {
   try {
-    // 验证用户会话
+    // Validate user session
     const session = await getServerSession(authOptions)
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    // Get fresh user data and check credits before generation
+    // Get fresh user data and check credits
     const freshUser = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { credits: true }
@@ -47,12 +66,11 @@ export async function POST(request: Request) {
       return new NextResponse('User not found', { status: 404 })
     }
 
-    // Check if user has enough credits (always required)
     if (freshUser.credits < COST_PER_GENERATION) {
       return new NextResponse('Insufficient credits', { status: 402 })
     }
 
-    // Always deduct credits and record usage
+    // Deduct credits and record usage
     await prisma.$transaction([
       prisma.user.update({
         where: { id: session.user.id },
@@ -67,40 +85,39 @@ export async function POST(request: Request) {
         }
       })
     ]);
-    console.log("💰 Credits deducted. New balance:", freshUser.credits - COST_PER_GENERATION);
 
     const replicate = new Replicate({
       auth: process.env.REPLICATE_API_TOKEN ?? ''
     })
 
     const { prompt, styleId, aspectRatio } = await request.json()
-    console.log('Received aspectRatio:', aspectRatio)
     
-    // 转换aspectRatio格式从 '/' 到 ':'
-    const formattedAspectRatio = aspectRatio.replace('/', ':')
-    
-    // 生成完整的 prompt
-    const fullPrompt = generatePrompt(prompt, styleId, formattedAspectRatio)
-    console.log('Generated prompt:', fullPrompt)
+    // Apply style transformation
+    const style = styleTransformations[styleId as keyof typeof styleTransformations]
+    if (!style) {
+      throw new Error('Invalid style selected')
+    }
 
-    // 计算实际尺寸
-    const dimensions = calculateDimensions(formattedAspectRatio)
-    console.log('Calculated dimensions:', dimensions)
+    const transformedPrompt = `${style.prefix}${prompt}${style.suffix}`
+    console.log('Transformed prompt:', transformedPrompt)
     
-    // 确保尺寸是有效的
-    const width = Math.max(64, Math.min(1024, dimensions.width))
-    const height = Math.max(64, Math.min(1024, dimensions.height))
+    // Calculate dimensions
+    const dimensions = calculateDimensions(aspectRatio)
+    console.log('Using dimensions:', dimensions)
 
-    // 使用run方法直接运行模型
+    // Generate image with exact dimensions
     const output = await replicate.run(
-      "black-forest-labs/flux-schnell",
+      "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
       {
         input: {
-          prompt: fullPrompt,
-          num_inference_steps: 4,
+          prompt: transformedPrompt,
+          width: dimensions.width,
+          height: dimensions.height,
+          scheduler: "K_EULER",
+          num_outputs: 1,
           guidance_scale: 7.5,
-          negative_prompt: "ugly, blurry, bad quality, distorted",
-          num_outputs: 1
+          negative_prompt: "ugly, blurry, poor quality, distorted",
+          num_inference_steps: 50,
         }
       }
     )
@@ -111,7 +128,7 @@ export async function POST(request: Request) {
       throw new Error('No output from Replicate API')
     }
 
-    // 处理ReadableStream
+    // Handle the output stream
     const stream = output[0]
     if (stream instanceof ReadableStream) {
       const reader = stream.getReader()
@@ -137,11 +154,12 @@ export async function POST(request: Request) {
         data: {
           userId: session.user.id,
           title: prompt.slice(0, 100),
-          description: `Generated with style ${styleId} and aspect ratio ${formattedAspectRatio}`,
-          prompt: fullPrompt,
+          description: transformedPrompt,
+          prompt: transformedPrompt,
           imageUrl: imageUrl,
-          type: "vision",
-          tags: [`style_${styleId}`, `ratio_${formattedAspectRatio}`]
+          type: "VISION",
+          tags: [`style_${styleId}`, `ratio_${aspectRatio}`],
+          updatedAt: new Date()
         }
       })
 

@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Download, X } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { Download } from 'lucide-react';
 import { Dialog, DialogContent } from "@/components/ui/Dialog";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/Button";
 
 interface ArtworkPreviewModalProps {
   isOpen: boolean;
@@ -27,49 +27,57 @@ export function ArtworkPreviewModal({
 
   const handleDownloadPNG = async () => {
     try {
-      const downloadUrl = `/api/coloring/download?url=${encodeURIComponent(artwork.imageUrl)}&format=png`;
+      setDownloading(true);
+      const downloadUrl = `/api/artwork/download?url=${encodeURIComponent(artwork.imageUrl)}&format=png`;
       
       const response = await fetch(downloadUrl);
       if (!response.ok) {
-        throw new Error('Failed to download image');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to download image');
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'coloring_page.png';
+      link.download = `${artwork.title.slice(0, 30)}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading PNG:', error);
-      toast.error('Failed to download PNG. Please try again.');
+      toast.error(error.message || 'Failed to download PNG. Please try again.');
+    } finally {
+      setDownloading(false);
     }
   };
 
   const handleDownloadPDF = async () => {
     try {
-      const downloadUrl = `/api/coloring/download?url=${encodeURIComponent(artwork.imageUrl)}&format=pdf`;
+      setDownloading(true);
+      const downloadUrl = `/api/artwork/download?url=${encodeURIComponent(artwork.imageUrl)}&format=pdf`;
       
       const response = await fetch(downloadUrl);
       if (!response.ok) {
-        throw new Error('Failed to download PDF');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to download PDF');
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'coloring_page.pdf';
+      link.download = `${artwork.title.slice(0, 30)}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading PDF:', error);
-      toast.error('Failed to download PDF. Please try again.');
+      toast.error(error.message || 'Failed to download PDF. Please try again.');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -93,7 +101,7 @@ export function ArtworkPreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] p-6" title="Artwork Preview">
+      <DialogContent className="max-w-6xl max-h-[90vh] p-6">
         <div className="flex gap-8">
           {/* Left: Image Preview */}
           <div className="w-1/2">
@@ -110,36 +118,38 @@ export function ArtworkPreviewModal({
 
           {/* Right: Information */}
           <div className="w-1/2 space-y-6 overflow-y-auto pr-2">
-            {/* Title and Description */}
+            {/* Title */}
             <div>
-              <h2 className="text-2xl font-semibold mb-2">{artwork.title}</h2>
-              {artwork.description && (
-                <p className="text-gray-600">{artwork.description}</p>
-              )}
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Title</h3>
+              <p className="text-base font-medium">{artwork.title}</p>
             </div>
 
-            {/* Prompt Information */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-medium mb-2">Mindful Prompt</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{artwork.prompt}</p>
+            {/* Prompt */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Prompt</h3>
+              <p className="text-base">{artwork.prompt}</p>
             </div>
 
             {/* Download Buttons */}
             <div className="flex gap-4">
-              <button
+              <Button
                 onClick={handleDownloadPNG}
-                className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                variant="outline"
+                className="flex-1"
+                disabled={downloading}
               >
-                <Download className="h-4 w-4" />
-                <span>Download PNG</span>
-              </button>
-              <button
+                <Download className="h-4 w-4 mr-2" />
+                Download PNG
+              </Button>
+              <Button
                 onClick={handleDownloadPDF}
-                className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                variant="outline"
+                className="flex-1"
+                disabled={downloading}
               >
-                <Download className="h-4 w-4" />
-                <span>Download PDF</span>
-              </button>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
             </div>
           </div>
         </div>

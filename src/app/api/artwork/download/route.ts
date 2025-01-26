@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth.config";
+import { PDFDocument } from 'pdf-lib';
+import sharp from 'sharp';
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -11,56 +12,100 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { artworkId } = await request.json();
+    // Get parameters from URL
+    const url = new URL(request.url);
+    const imageUrl = url.searchParams.get('url');
+    const format = url.searchParams.get('format')?.toLowerCase(); // 'png' or 'pdf'
 
-    if (!artworkId) {
-      return NextResponse.json({ error: "Artwork ID is required" }, { status: 400 });
+    if (!imageUrl) {
+      return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
     }
 
-    // 获取作品信息
-    const artwork = await prisma.artwork.findUnique({
-      where: {
-        id: artworkId,
-      },
-    });
-
-    if (!artwork) {
-      return NextResponse.json({ error: "Artwork not found" }, { status: 404 });
+    if (!format || !['png', 'pdf'].includes(format)) {
+      return NextResponse.json({ error: "Invalid format" }, { status: 400 });
     }
 
-    // 获取图片内容
-    const imageResponse = await fetch(artwork.imageUrl);
+    // Fetch image content
+    const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
       throw new Error('Failed to fetch image');
     }
 
-    // 获取图片内容类型
-    const contentType = imageResponse.headers.get('content-type') || 'image/png';
-
-    // 更新下载计数
-    await prisma.artwork.update({
-      where: {
-        id: artworkId,
-      },
-      data: {
-        downloads: {
-          increment: 1,
+    // Get the image data as Buffer
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    
+    // If PNG, return directly
+    if (format === 'png') {
+      // Convert to PNG if not already
+      const pngBuffer = await sharp(imageBuffer).png().toBuffer();
+      return new NextResponse(pngBuffer, {
+        headers: {
+          'Content-Type': 'image/png',
+          'Content-Disposition': `attachment; filename="artwork.png"`,
         },
-      },
-    });
+      });
+    }
 
-    // 返回图片数据
-    const imageData = await imageResponse.blob();
-    return new NextResponse(imageData, {
-      headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${artwork.title}.png"`,
-      },
-    });
-  } catch (error) {
+    // If PDF, convert the image
+    if (format === 'pdf') {
+      try {
+        console.log('Starting PDF conversion...');
+        
+        // First convert image to PNG using sharp
+        console.log('Converting image to PNG format...');
+        const pngBuffer = await sharp(imageBuffer).png().toBuffer();
+        console.log('Image converted to PNG successfully');
+        
+        // Create a new PDF document
+        const pdfDoc = await PDFDocument.create();
+        console.log('PDF document created');
+        
+        // Get image dimensions
+        const metadata = await sharp(pngBuffer).metadata();
+        const { width = 800, height = 600 } = metadata;
+        
+        // Embed the PNG image
+        console.log('Attempting to embed PNG image...');
+        const pngImage = await pdfDoc.embedPng(pngBuffer);
+        console.log('PNG image embedded successfully');
+        
+        // Add a new page with the image dimensions
+        const page = pdfDoc.addPage([width, height]);
+        console.log('Page added with dimensions:', width, 'x', height);
+        
+        // Draw the image on the page
+        page.drawImage(pngImage, {
+          x: 0,
+          y: 0,
+          width: width,
+          height: height,
+        });
+        console.log('Image drawn on page');
+        
+        // Save the PDF
+        console.log('Saving PDF...');
+        const pdfBytes = await pdfDoc.save();
+        console.log('PDF saved successfully');
+        
+        return new NextResponse(pdfBytes, {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="artwork.pdf"`,
+          },
+        });
+      } catch (pdfError: any) {
+        console.error("PDF conversion failed:", pdfError);
+        console.error("Error details:", pdfError.message);
+        console.error("Error stack:", pdfError.stack);
+        throw new Error(`Failed to convert image to PDF: ${pdfError.message}`);
+      }
+    }
+
+    return NextResponse.json({ error: "Invalid format" }, { status: 400 });
+  } catch (error: any) {
     console.error("Download failed:", error);
     return NextResponse.json(
-      { error: "Failed to download artwork" },
+      { error: error.message || "Failed to download image" },
       { status: 500 }
     );
   }

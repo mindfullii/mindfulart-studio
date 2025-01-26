@@ -1,42 +1,305 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/Dialog";
+import { toast } from "sonner";
 import Image from 'next/image';
-import { Download } from 'lucide-react';
-import { toast } from 'sonner';
-import { useSession, signIn } from 'next-auth/react';
-import { Dialog, DialogContent } from '@/components/ui/Dialog';
-import { Input } from '@/components/ui/Input';
-import Link from 'next/link';
+import { useSession } from "next-auth/react";
+
+interface ColoringPreviewProps {
+  imageUrl: string
+  description: string
+  prompt: string
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  onDownload: (format: 'png' | 'pdf') => void
+  isDownloading: boolean
+}
+
+function ColoringPreview({ 
+  imageUrl, 
+  description,
+  prompt,
+  isOpen, 
+  onOpenChange,
+  onDownload,
+  isDownloading 
+}: ColoringPreviewProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[1200px] max-h-[90vh] p-8">
+        <div className="flex flex-col gap-6">
+          {/* Title */}
+          <div>
+            <h2 className="text-2xl font-semibold mb-2">Your Mindful Coloring Page</h2>
+            <p className="text-gray-600">{description}</p>
+          </div>
+
+          {/* Content */}
+          <div className="flex gap-8 h-[calc(90vh-8rem)]">
+            {/* Left: Image Preview */}
+            <div className="flex-1 min-w-0">
+              <div className="relative h-full border border-gray-100 rounded-lg overflow-hidden bg-gray-50">
+                <img
+                  src={imageUrl}
+                  alt="Generated coloring page"
+                  className="w-full h-full object-contain p-4"
+                />
+              </div>
+            </div>
+
+            {/* Right: Information */}
+            <div className="w-96 flex flex-col">
+              {/* Generated Prompt */}
+              <div className="flex-1 overflow-y-auto">
+                <h3 className="text-base font-medium mb-3">Generated Prompt</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{prompt}</p>
+                </div>
+              </div>
+
+              {/* Download Buttons */}
+              <div className="space-y-3 pt-6">
+                <Button
+                  onClick={() => onDownload('png')}
+                  variant="outline"
+                  className="w-full"
+                  disabled={isDownloading}
+                >
+                  Download PNG
+                </Button>
+                <Button
+                  onClick={() => onDownload('pdf')}
+                  variant="outline"
+                  className="w-full"
+                  disabled={isDownloading}
+                >
+                  Download PDF
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export function ColoringGenerator() {
   const { data: session } = useSession();
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: ''
-  });
+  const [showPreview, setShowPreview] = useState(false);
+  const [generatedPrompt, setGeneratedPrompt] = useState('');
+
+  // 智能共振转化层系统
+  const resonanceSystem = {
+    // 第一层：意图识别层
+    analyzeIntent: (input: string) => {
+      const keywords = {
+        character: ['character', 'person', 'figure', 'hero', 'friend', 'animal', 'creature'],
+        scene: ['landscape', 'scene', 'place', 'garden', 'forest', 'beach', 'mountain'],
+        abstract: ['pattern', 'design', 'shape', 'form', 'flow', 'energy', 'feeling'],
+        memory: ['memory', 'childhood', 'remember', 'past', 'time', 'moment', 'experience']
+      };
+
+      input = input.toLowerCase();
+      for (const [type, words] of Object.entries(keywords)) {
+        if (words.some(word => input.includes(word))) {
+          return type;
+        }
+      }
+      return 'scene'; // 默认场景类型
+    },
+
+    // 第二层：情感共振层
+    analyzeResonance: (input: string) => {
+      const resonancePatterns = {
+        nurturing: ['comfort', 'warm', 'safe', 'gentle', 'soft', 'care'],
+        empowering: ['strong', 'power', 'confident', 'brave', 'free'],
+        calming: ['peace', 'quiet', 'calm', 'relax', 'tranquil', 'serene'],
+        uplifting: ['happy', 'joy', 'light', 'bright', 'fun', 'play'],
+        grounding: ['earth', 'solid', 'stable', 'root', 'deep', 'firm'],
+        flowing: ['water', 'flow', 'river', 'wave', 'stream', 'fluid']
+      };
+
+      input = input.toLowerCase();
+      let resonances = [];
+      for (const [pattern, words] of Object.entries(resonancePatterns)) {
+        if (words.some(word => input.includes(word))) {
+          resonances.push(pattern);
+        }
+      }
+      return resonances[0] || 'calming'; // 默认使用平静的共振
+    },
+
+    // 第三层：转化增益层
+    generateTransformation: (intent: string, resonance: string) => {
+      const transformations = {
+        character: {
+          nurturing: {
+            elements: ['gentle expressions', 'soft outlines', 'protective symbols'],
+            focus: 'creating a sense of comfort and care'
+          },
+          empowering: {
+            elements: ['dynamic poses', 'uplifting gestures', 'strength symbols'],
+            focus: 'expressing inner strength and confidence'
+          },
+          calming: {
+            elements: ['peaceful expressions', 'balanced poses', 'serene details'],
+            focus: 'radiating tranquility and peace'
+          },
+          uplifting: {
+            elements: ['joyful expressions', 'playful details', 'light motifs'],
+            focus: 'sharing joy and positive energy'
+          },
+          grounding: {
+            elements: ['stable poses', 'earth symbols', 'rooted forms'],
+            focus: 'connecting with inner stability'
+          },
+          flowing: {
+            elements: ['flowing lines', 'graceful movements', 'fluid forms'],
+            focus: 'expressing natural flow and harmony'
+          }
+        },
+        scene: {
+          nurturing: {
+            elements: ['cozy spaces', 'protective elements', 'soft landscapes'],
+            focus: 'creating a safe and nurturing environment'
+          },
+          empowering: {
+            elements: ['expansive views', 'rising forms', 'strong landmarks'],
+            focus: 'inspiring strength and possibility'
+          },
+          calming: {
+            elements: ['peaceful settings', 'gentle nature', 'quiet spaces'],
+            focus: 'fostering peace and tranquility'
+          },
+          uplifting: {
+            elements: ['bright scenes', 'playful nature', 'joyful settings'],
+            focus: 'celebrating life and joy'
+          },
+          grounding: {
+            elements: ['solid structures', 'earth elements', 'stable forms'],
+            focus: 'providing stability and groundedness'
+          },
+          flowing: {
+            elements: ['flowing water', 'wind patterns', 'natural rhythms'],
+            focus: 'moving with life\'s natural flow'
+          }
+        },
+        abstract: {
+          nurturing: {
+            elements: ['rounded forms', 'embracing shapes', 'protective patterns'],
+            focus: 'expressing care and comfort'
+          },
+          empowering: {
+            elements: ['rising patterns', 'dynamic forms', 'strong shapes'],
+            focus: 'channeling inner strength'
+          },
+          calming: {
+            elements: ['balanced patterns', 'gentle rhythms', 'peaceful forms'],
+            focus: 'creating visual peace'
+          },
+          uplifting: {
+            elements: ['light patterns', 'playful shapes', 'joyful forms'],
+            focus: 'lifting spirits through design'
+          },
+          grounding: {
+            elements: ['stable patterns', 'rooted forms', 'earth symbols'],
+            focus: 'anchoring through design'
+          },
+          flowing: {
+            elements: ['fluid patterns', 'flowing forms', 'natural rhythms'],
+            focus: 'expressing natural movement'
+          }
+        },
+        memory: {
+          nurturing: {
+            elements: ['nostalgic symbols', 'comforting details', 'familiar forms'],
+            focus: 'honoring cherished memories'
+          },
+          empowering: {
+            elements: ['transformative symbols', 'growth patterns', 'journey motifs'],
+            focus: 'celebrating personal growth'
+          },
+          calming: {
+            elements: ['gentle reminders', 'peaceful moments', 'serene memories'],
+            focus: 'finding peace in reflection'
+          },
+          uplifting: {
+            elements: ['happy moments', 'joyful memories', 'playful details'],
+            focus: 'celebrating joyful memories'
+          },
+          grounding: {
+            elements: ['rooted memories', 'foundational moments', 'stable symbols'],
+            focus: 'connecting with our roots'
+          },
+          flowing: {
+            elements: ['flowing timelines', 'evolving patterns', 'journey symbols'],
+            focus: 'embracing life\'s flow'
+          }
+        }
+      };
+
+      const transformation = transformations[intent as keyof typeof transformations]?.[resonance as keyof (typeof transformations)['character']] || 
+        transformations.scene.calming;
+
+      return transformation;
+    }
+  };
+
+  const buildStructuredPrompt = (description: string) => {
+    // 使用智能共振转化层系统分析和转化用户输入
+    const intent = resonanceSystem.analyzeIntent(description);
+    const resonance = resonanceSystem.analyzeResonance(description);
+    const transformation = resonanceSystem.generateTransformation(intent, resonance);
+    
+    let prompt = `Create a mindful coloring page featuring ${description}.
+
+Transformation Focus: ${transformation.focus}
+
+Style Guidelines:
+- Key elements: ${transformation.elements.join(', ')}
+- Create clear, flowing outlines suitable for therapeutic coloring
+- Maintain generous white space with mindful pattern spacing
+- Keep the background completely white for coloring
+- Add subtle details that encourage mindful attention
+- Ensure all lines are clean and well-defined
+
+The design should be both visually engaging and calming to color, promoting a sense of peace and mindfulness.`;
+
+    return prompt;
+  };
 
   const handleGenerate = async () => {
+    if (!session) {
+      setShowAuthModal(true)
+      return
+    }
+
     if (!prompt.trim()) {
-      toast.error('Please enter a prompt first');
+      toast.error('Please share what you would like to create');
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
+      const structuredPrompt = buildStructuredPrompt(prompt);
+      setGeneratedPrompt(structuredPrompt);
+
       const response = await fetch('/api/create/coloring', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt: structuredPrompt,
+          description: prompt
+        }),
       });
 
       if (response.status === 401) {
@@ -45,129 +308,43 @@ export function ColoringGenerator() {
       }
 
       if (!response.ok) {
-        throw new Error('Failed to generate image');
+        throw new Error('Failed to generate coloring page');
       }
 
       const data = await response.json();
       setGeneratedImageUrl(data.imageUrl);
+      setShowPreview(true);
     } catch (error) {
-      console.error('Error generating image:', error);
-      toast.error('Failed to generate image. Please try again.');
+      console.error('Error:', error);
+      toast.error('Failed to generate coloring page');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true);
-      await signIn('google', { callbackUrl: '/create/coloring' });
-    } catch (error) {
-      console.error('Error signing in with Google:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleDownload = async (format: 'png' | 'pdf') => {
+    if (!generatedImageUrl) return;
 
     try {
-      if (activeTab === 'signup') {
-        // 处理注册
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
-
-        if (!res.ok) {
-          throw new Error('Registration failed');
-        }
-
-        // 注册成功后自动登录
-        const result = await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        });
-
-        if (result?.error) {
-          throw new Error(result.error);
-        }
-
-        setShowAuthModal(false);
-      } else {
-        // 处理登录
-        const result = await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        });
-
-        if (result?.error) {
-          throw new Error(result.error);
-        }
-
-        setShowAuthModal(false);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDownloadPNG = async () => {
-    try {
-      if (!generatedImageUrl) return;
-
-      const downloadUrl = `/api/coloring/download?url=${encodeURIComponent(generatedImageUrl)}&format=png`;
-      
-      const response = await fetch(downloadUrl);
+      setLoading(true);
+      const response = await fetch(`/api/artwork/download?url=${encodeURIComponent(generatedImageUrl)}&format=${format}`);
       if (!response.ok) {
-        throw new Error('Failed to download image');
+        throw new Error('Failed to download');
       }
-
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'coloring_page.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `coloring-page.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading PNG:', error);
-      toast.error('Failed to download PNG. Please try again.');
-    }
-  };
-
-  const handleDownloadPDF = async () => {
-    try {
-      if (!generatedImageUrl) return;
-
-      const downloadUrl = `/api/coloring/download?url=${encodeURIComponent(generatedImageUrl)}&format=pdf`;
-      
-      const response = await fetch(downloadUrl);
-      if (!response.ok) {
-        throw new Error('Failed to download PDF');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'coloring_page.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast.error('Failed to download PDF. Please try again.');
+      console.error('Download error:', error);
+      toast.error('Failed to download. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -256,155 +433,39 @@ export function ColoringGenerator() {
               </div>
             </div>
 
-            {/* Right Column - Auth Form */}
-            <div className="p-6 flex flex-col min-h-[420px]">
-              {/* Tabs */}
-              <div className="flex space-x-4 border-b mb-4">
-                <button
-                  onClick={() => setActiveTab('signin')}
-                  className={`pb-2 px-4 transition-colors ${
-                    activeTab === 'signin'
-                      ? 'border-b-2 border-[#6DB889] text-[#6DB889]'
-                      : 'text-gray-500'
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setActiveTab('signup')}
-                  className={`pb-2 px-4 transition-colors ${
-                    activeTab === 'signup'
-                      ? 'border-b-2 border-[#6DB889] text-[#6DB889]'
-                      : 'text-gray-500'
-                  }`}
-                >
-                  Sign Up
-                </button>
-              </div>
+            {/* Right Column - Sign In Options */}
+            <div className="p-6 flex flex-col justify-center">
+              <h3 className="text-lg font-semibold text-gray-900 text-center mb-6">
+                Sign in to continue
+              </h3>
               
-              <div className="flex-1 flex flex-col">
-                <div className="space-y-4">
-                  <button
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-lg px-4 py-2 border border-gray-200 transition-colors"
-                  >
-                    <img
-                      src="/icons/google.svg"
-                      alt="Google"
-                      className="w-4 h-4"
-                    />
-                    Continue with Google
-                  </button>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">
-                        Or continue with email
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="h-[180px] transition-all duration-200 ease-in-out">
-                    <form onSubmit={handleSubmit} className="space-y-2.5">
-                      {activeTab === 'signup' && (
-                        <Input
-                          placeholder="Name"
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          required
-                        />
-                      )}
-                      <Input
-                        type="email"
-                        placeholder="Email"
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        required
-                      />
-                      <Input
-                        type="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                        required
-                      />
-                      
-                      {activeTab === 'signin' && (
-                        <div className="flex justify-end">
-                          <Link 
-                            href="/forgot-password"
-                            className="text-sm text-[#6DB889] hover:text-[#5CA978] transition-colors"
-                          >
-                            Forgot password?
-                          </Link>
-                        </div>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-[#6DB889] hover:bg-[#5CA978] text-white font-medium rounded-lg px-4 py-2 transition-colors mt-2"
-                      >
-                        {isLoading ? 'Loading...' : activeTab === 'signin' ? 'Sign In' : 'Sign Up'}
-                      </button>
-                    </form>
-                  </div>
-                </div>
+              <div className="space-y-4">
+                <button
+                  onClick={() => {
+                    const returnUrl = encodeURIComponent(window.location.pathname);
+                    window.location.href = `/login?returnUrl=${returnUrl}`;
+                  }}
+                  className="w-full py-2.5 px-4 border border-gray-300 rounded-lg flex items-center justify-center space-x-2 hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-base font-medium">Continue with Email</span>
+                </button>
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* 温暖的加载状态 */}
-      {loading && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 shadow-xl max-w-md w-full mx-4">
-            <div className="flex items-center justify-center space-x-4">
-              <div className="w-8 h-8 border-4 border-[#6DB889] border-t-transparent rounded-full animate-spin" />
-              <p className="text-base font-medium">Creating your mindful space...</p>
-            </div>
-            <p className="text-gray-500 text-center mt-4 text-sm">
-              Understanding your thoughts and weaving them into a peaceful design. This thoughtful process takes a moment...
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* 生成结果展示区域 */}
       {generatedImageUrl && (
-        <div className="bg-white rounded-lg p-8 shadow-lg">
-          <h2 className="text-lg font-semibold mb-6">Your Mindful Coloring Page</h2>
-          <div className="relative aspect-square w-full mb-6 border border-gray-100 rounded-lg overflow-hidden">
-            <Image
-              src={generatedImageUrl}
-              alt="Your mindful coloring page"
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={handleDownloadPNG}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-base"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download PNG</span>
-            </button>
-            <button
-              onClick={handleDownloadPDF}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-base"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download PDF</span>
-            </button>
-          </div>
-        </div>
+        <ColoringPreview
+          imageUrl={generatedImageUrl}
+          description={prompt}
+          prompt={generatedPrompt}
+          isOpen={showPreview}
+          onOpenChange={setShowPreview}
+          onDownload={handleDownload}
+          isDownloading={loading}
+        />
       )}
     </div>
   );
