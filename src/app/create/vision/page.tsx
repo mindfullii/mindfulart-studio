@@ -181,9 +181,6 @@ export default function VisionPage() {
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-xl font-medium mb-4">
-                Describe Your Vision
-              </label>
               <Textarea
                 value={prompt}
                 onChange={(e) => handlePromptChange(e.target.value)}
@@ -313,27 +310,28 @@ export default function VisionPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <CardTitle className="text-[2em] font-semibold leading-[1.2] text-gray-800">
-              Decorate Your Space with Inner Vision ✨
-            </CardTitle>
-            <div className="space-y-4 text-gray-600">
-              <p className="text-base leading-relaxed">
-                What makes it special? Inner Vision doesn't just create art - it thoughtfully captures your emotions and transforms them into healing visual experiences. Each piece is designed to bring peace, uplift your energy, and create spaces that resonate with your soul.
-              </p>
-              <p className="text-base leading-relaxed">
-                No need to be an artist or explain complex feelings. Your AI companion understands the language of emotions and translates them into meaningful artwork. Whether it's a serene piece for your meditation corner, an uplifting scene for your workspace, or a series of healing artworks for your home - each creation is personally crafted to support your emotional wellbeing 🎨
-              </p>
-              <p className="text-base leading-relaxed italic">
-                Let's create art that transforms your space and nurtures your spirit.
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6">
+    <div className="w-full">
+      {/* Title and Introduction Section - Default Background */}
+      <div className="w-full max-w-4xl mx-auto space-y-4 text-center pt-16 mb-8">
+        <h1 className="text-[2em] font-bold">
+          Decorate Your Space with Inner Vision ✨
+        </h1>
+        <div className="space-y-4 text-muted-foreground">
+          <p>
+            What makes it special? Inner Vision doesn't just create art - it thoughtfully captures your emotions and transforms them into healing visual experiences. Each piece is designed to bring peace, uplift your energy, and create spaces that resonate with your soul.
+          </p>
+          <p>
+            No need to be an artist or explain complex feelings. Your AI companion understands the language of emotions and translates them into meaningful artwork. Whether it's a serene piece for your meditation corner, an uplifting scene for your workspace, or a series of healing artworks for your home - each creation is personally crafted to support your emotional wellbeing 🎨
+          </p>
+          <p className="italic">
+            Let's create art that transforms your space and nurtures your spirit.
+          </p>
+        </div>
+      </div>
+
+      {/* Content Section - White Background */}
+      <Card className="w-full max-w-4xl mx-auto bg-white">
+        <CardContent className="p-6">
           {renderStepContent()}
         </CardContent>
       </Card>
@@ -350,7 +348,7 @@ export default function VisionPage() {
 
       <AuthModal 
         isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
+        onClose={() => setShowAuthModal(false)}
       />
     </div>
   )

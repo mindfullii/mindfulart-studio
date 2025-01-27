@@ -1,5 +1,9 @@
-import MeditationFlow from "@/components/create/meditation/MeditationFlow";
+import { MeditationFlow } from "@/components/create/meditation/MeditationFlow";
 
 export default function MeditationPage() {
-  return <MeditationFlow />;
+  return (
+    <div className="container py-8">
+      <MeditationFlow />
+    </div>
+  );
 } 

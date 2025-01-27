@@ -2,92 +2,83 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Waves, Maximize2, X } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/Dialog";
+import { Button } from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
 import Image from "next/image";
+import { meditationThemes } from "@/lib/meditation-themes";
+import { Theme } from "@/types/meditation";
+import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/Dialog";
+import { Maximize2 } from "lucide-react";
+import { MeditationPreviewDialog } from "./MeditationPreviewDialog";
 
 interface EmotionData {
+  label: string;
   description: string;
-  themes: string[];
   icon: string;
+  resonancePattern: string;
+  healingElements: string[];
 }
 
-interface Emotions {
-  [key: string]: EmotionData;
-}
+const emotions: Record<string, EmotionData> = {
+  'anxious': {
+    label: 'Anxious',
+    description: 'Feeling worried or uneasy',
+    icon: '🌊',
+    resonancePattern: 'grounding',
+    healingElements: ['stability', 'safety', 'peace']
+  },
+  'overwhelmed': {
+    label: 'Overwhelmed',
+    description: 'Too much to handle',
+    icon: '🗻',
+    resonancePattern: 'centering',
+    healingElements: ['space', 'clarity', 'simplicity']
+  },
+  'restless': {
+    label: 'Restless',
+    description: 'Unable to stay still or focus',
+    icon: '🍃',
+    resonancePattern: 'flowing',
+    healingElements: ['rhythm', 'flow', 'balance']
+  },
+  'seeking-growth': {
+    label: 'Seeking Growth',
+    description: 'Ready for transformation',
+    icon: '🌱',
+    resonancePattern: 'expanding',
+    healingElements: ['possibility', 'transformation', 'expansion']
+  },
+  'need-grounding': {
+    label: 'Need Grounding',
+    description: 'Feeling disconnected',
+    icon: '🌳',
+    resonancePattern: 'grounding',
+    healingElements: ['stability', 'connection', 'presence']
+  },
+  'seeking-harmony': {
+    label: 'Seeking Harmony',
+    description: 'Looking for balance',
+    icon: '☯️',
+    resonancePattern: 'centering',
+    healingElements: ['harmony', 'balance', 'unity']
+  }
+};
 
-const MeditationFlow = () => {
-  const [currentStep, setCurrentStep] = useState<'emotion' | 'theme' | 'generate'>('emotion');
+export function MeditationFlow() {
+  const [currentStep, setCurrentStep] = useState<'emotion' | 'theme' | 'format'>('emotion');
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<'mobile' | 'desktop' | 'tablet' | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   
   const { data: session } = useSession();
   const router = useRouter();
-
-  // Load saved state when component mounts
-  useEffect(() => {
-    const savedState = localStorage.getItem('meditationFlowState');
-    if (savedState) {
-      const { 
-        selectedEmotion, 
-        selectedTheme, 
-        currentStep 
-      } = JSON.parse(savedState);
-      
-      setSelectedEmotion(selectedEmotion);
-      setSelectedTheme(selectedTheme);
-      setCurrentStep(currentStep);
-      
-      // Clear the saved state after restoring it
-      localStorage.removeItem('meditationFlowState');
-    }
-  }, []);
-
-  const emotions: Emotions = {
-    'Anxious': {
-      description: 'Seeking calmness and comfort',
-      themes: ['Water Flow', 'Cloud Paths', 'Gentle Waves'],
-      icon: '🌊'
-    },
-    'Overwhelmed': {
-      description: 'Finding space and release',
-      themes: ['Open Sky', 'Mountain View', 'Forest Clearing'],
-      icon: '🗻'
-    },
-    'Restless': {
-      description: 'Finding rhythm and serenity',
-      themes: ['Falling Leaves', 'Moonlit Lake', 'Swaying Grass'],
-      icon: '🍃'
-    },
-    'Seeking Peace': {
-      description: 'Finding inner tranquility',
-      themes: ['Garden Path', 'Lotus Pond', 'Starry Night'],
-      icon: '🌸'
-    },
-    'Need Grounding': {
-      description: 'Seeking stability and strength',
-      themes: ['Ancient Tree', 'Stone Garden', 'Mountain Base'],
-      icon: '🌳'
-    },
-    'Want Inspiration': {
-      description: 'Sparking creativity and vitality',
-      themes: ['Rising Sun', 'Blooming Garden', 'Light Streams'],
-      icon: '✨'
-    }
-  };
 
   const handleEmotionSelect = (emotion: string) => {
     if (!session) {
@@ -99,61 +90,41 @@ const MeditationFlow = () => {
     setCurrentStep('theme');
   };
 
-  const handleThemeSelect = async (theme: string) => {
+  const handleThemeSelect = (theme: Theme) => {
     setSelectedTheme(theme);
-    setCurrentStep('generate');
-    await generateImage(selectedEmotion!, theme);
+    setCurrentStep('format');
   };
 
-  const generateImage = async (emotion: string, theme: string) => {
-    // Save current state before attempting to generate
-    const stateToSave = {
-      selectedEmotion,
-      selectedTheme,
-      currentStep
-    };
-    localStorage.setItem('meditationFlowState', JSON.stringify(stateToSave));
+  const handleFormatSelect = async (format: 'mobile' | 'desktop' | 'tablet') => {
+    setSelectedFormat(format);
+    setIsGenerating(true);
+    await generateImage(format);
+  };
+
+  const generateImage = async (format: string) => {
+    if (!selectedEmotion || !selectedTheme) return;
 
     try {
-      const prompt = `A serene and ethereal ${theme.toLowerCase()} scene for meditation. Artistic, dreamlike quality with soft, harmonious colors. ${emotion.toLowerCase()} mood. Minimalist composition, abstract elements, zen atmosphere. High-end digital art, peaceful and calming, masterful lighting. Style of a fine art painting.`;
-
-      console.log('Sending request with:', { prompt });
-      setIsGenerating(true);
-      setError(null);
+      const emotion = emotions[selectedEmotion];
+      const prompt = `Create a meditation visual that embodies ${emotion.resonancePattern} energy.
+Theme: ${selectedTheme.label}
+Emotional State: ${emotion.label}
+Healing Elements: ${emotion.healingElements.join(', ')}
+Visual Elements: ${selectedTheme.visualElements.join(', ')}
+Format: Optimized for ${format} viewing
+Style: Soft, ethereal, mindful visual design with perfect composition for ${format} screens`;
 
       const response = await fetch('/api/create/meditation', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, format }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to generate image');
       
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('Parsed response data:', data);
-      } catch (e) {
-        console.error('Failed to parse response:', e);
-        throw new Error('Invalid response format from server');
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate image');
-      }
-      
-      if (!data.imageUrl) {
-        throw new Error('No image URL received');
-      }
-
-      console.log('Setting image URL to:', data.imageUrl);
       setImageUrl(data.imageUrl);
+      setShowPreview(true);
     } catch (err) {
       console.error('Generation error:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate image');
@@ -162,219 +133,140 @@ const MeditationFlow = () => {
     }
   };
 
-  const handleStartOver = () => {
-    setCurrentStep('emotion');
-    setSelectedEmotion(null);
-    setSelectedTheme(null);
-    setImageUrl(null);
-    setError(null);
-  };
-
-  const handleDownload = async () => {
-    if (imageUrl) {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `meditation-${selectedEmotion}-${selectedTheme}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      toast.success("Image downloaded successfully!");
-    }
-  };
-
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      {/* Header */}
-      <Card className="border-none shadow-none">
-        <CardContent className="text-center space-y-4">
-          <Waves className="w-12 h-12 mx-auto text-primary" />
-          <h1 className="text-3xl font-bold">Meditation Visual</h1>
-          <p className="text-muted-foreground max-w-3xl mx-auto">
-            A mindful companion that creates personalized visual guides for your meditation practice. 
-            Simply share how you feel, and we&apos;ll generate the perfect visual anchor to support 
-            your journey to inner peace.
+    <div className="w-full">
+      {/* Title and Introduction Section - Default Background */}
+      <div className="w-full max-w-4xl mx-auto space-y-4 text-center pt-8 mb-8">
+        <h1 className="text-[2em] font-bold">
+          Meet your mindful wallpaper companion ✨
+        </h1>
+        <div className="space-y-4 text-muted-foreground">
+          <p>
+            What makes it special? It's not just a wallpaper – it's a visual anchor that brings peace to your daily digital life. Each time you look at your screen, you'll naturally find yourself drawn into a moment of calm and presence.
           </p>
-          <p className="text-sm text-muted-foreground">1 creation costs 1 credit</p>
-        </CardContent>
-      </Card>
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Area */}
-        <div className="lg:col-span-2">
-          {/* Emotion Selection */}
-          {currentStep === 'emotion' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl text-center">How are you feeling today?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(emotions).map(([emotion, data]) => (
-                    <button
-                      key={emotion}
-                      onClick={() => handleEmotionSelect(emotion)}
-                      className="p-6 rounded-lg border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
-                    >
-                      <div className="text-3xl">{data.icon}</div>
-                      <div className="font-medium">{emotion}</div>
-                      <div className="text-sm text-muted-foreground">{data.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Theme Selection */}
-          {currentStep === 'theme' && selectedEmotion && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl text-center">
-                  Choose your visual anchor for {selectedEmotion}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {emotions[selectedEmotion].themes.map((theme) => (
-                    <button
-                      key={theme}
-                      onClick={() => handleThemeSelect(theme)}
-                      className="p-6 rounded-lg border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
-                    >
-                      <div className="font-medium">{theme}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Let this guide your meditation
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                <Button
-                  variant="ghost"
-                  onClick={() => setCurrentStep('emotion')}
-                  className="mt-6"
-                >
-                  ← Choose another feeling
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Generation Step */}
-          {currentStep === 'generate' && selectedTheme && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl text-center">
-                  Creating Your Meditation Visual
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-4">
-                {isGenerating ? (
-                  <div className="p-12 bg-accent rounded-lg animate-pulse flex items-center justify-center">
-                    <div className="space-y-4 text-center">
-                      <Waves className="w-12 h-12 mx-auto text-primary animate-bounce" />
-                      <div>Creating your meditation visual...</div>
-                    </div>
-                  </div>
-                ) : error ? (
-                  <div className="p-6 bg-destructive/10 text-destructive rounded-lg">
-                    <p>{typeof error === 'string' ? error : 'An error occurred while generating the image'}</p>
-                    <Button
-                      variant="ghost"
-                      onClick={() => generateImage(selectedEmotion!, selectedTheme!)}
-                      className="mt-4"
-                    >
-                      Try Again
-                    </Button>
-                  </div>
-                ) : imageUrl ? (
-                  <div className="space-y-4">
-                    <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-                      <Image
-                        key={imageUrl}
-                        src={imageUrl}
-                        alt="Generated meditation visual"
-                        fill
-                        className="object-contain"
-                        crossOrigin="anonymous"
-                        loading="eager"
-                        onError={(e) => {
-                          console.error('Image load error:', e);
-                          const imgElement = e.target as HTMLImageElement;
-                          console.log('Failed URL:', imgElement.src);
-                          console.log('Image natural size:', imgElement.naturalWidth, 'x', imgElement.naturalHeight);
-                          console.log('Complete error details:', {
-                            error: e,
-                            target: imgElement,
-                            currentSrc: imgElement.currentSrc,
-                            complete: imgElement.complete,
-                            naturalSize: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
-                          });
-                          setError('Failed to load the generated image. Please try again.');
-                        }}
-                        onLoad={(e) => {
-                          const imgElement = e.target as HTMLImageElement;
-                          console.log('Image loaded successfully:', {
-                            url: imageUrl,
-                            naturalSize: `${imgElement.naturalWidth}x${imgElement.naturalHeight}`,
-                            currentSrc: imgElement.currentSrc,
-                            complete: imgElement.complete
-                          });
-                        }}
-                      />
-                    </div>
-                    <div className="flex justify-center gap-4">
-                      <Button onClick={handleDownload} className="bg-[#88B3BA] hover:bg-[#6B8F96]">
-                        Download Image
-                      </Button>
-                      <Button onClick={handleStartOver} className="border hover:bg-gray-100">
-                        Start Over
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* FAQ Section */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Frequently Asked Questions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="font-medium">What is a Meditation Visual?</h3>
-                <p className="text-sm text-muted-foreground">
-                  A Meditation Visual is a unique image generated to support your meditation practice. 
-                  It serves as a visual anchor, helping you maintain focus and enhance your mindfulness experience.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-medium">How does it work?</h3>
-                <p className="text-sm text-muted-foreground">
-                  1. Select your current emotional state
-                  2. Choose a theme that resonates with you
-                  3. We&apos;ll generate a unique visual tailored to your selection
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-medium">How many credits does it cost?</h3>
-                <p className="text-sm text-muted-foreground">
-                  Each meditation visual generation costs 1 credit. New users receive 10 free credits upon registration.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <p>
+            No complex settings, no overwhelming choices. Let your AI companion create the perfect meditation visual that resonates with your emotional state. Every wallpaper is a personalized mindful space crafted just for you, available in sizes that fit all your devices perfectly 🌸
+          </p>
         </div>
       </div>
+
+      {/* Content Section - White Background */}
+      <Card className="w-full max-w-4xl mx-auto bg-white">
+        <CardContent className="p-6 space-y-8">
+          {currentStep === 'emotion' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">How are you feeling today?</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(emotions).map(([key, emotion]) => (
+                  <Button
+                    key={key}
+                    variant="outline"
+                    className={cn(
+                      "h-auto p-6 flex flex-col items-center gap-2",
+                      selectedEmotion === key && "border-2 border-primary"
+                    )}
+                    onClick={() => handleEmotionSelect(key)}
+                  >
+                    <span className="text-3xl">{emotion.icon}</span>
+                    <span className="font-medium">{emotion.label}</span>
+                    <span className="text-sm text-muted-foreground text-center">
+                      {emotion.description}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {currentStep === 'theme' && selectedEmotion && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">
+                Choose a theme that resonates with you
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.values(meditationThemes).flatMap(category => 
+                  category.themes.filter((theme: Theme) => 
+                    theme.resonancePattern === emotions[selectedEmotion].resonancePattern
+                  )
+                ).map((theme: Theme) => (
+                  <Button
+                    key={theme.id}
+                    variant="outline"
+                    className={cn(
+                      "h-auto p-4 flex flex-col items-start gap-2",
+                      selectedTheme?.id === theme.id && "border-2 border-primary"
+                    )}
+                    onClick={() => handleThemeSelect(theme)}
+                  >
+                    <span className="font-medium">{theme.label}</span>
+                    <span className="text-sm text-muted-foreground text-left">
+                      {theme.description}
+                    </span>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {theme.healingProperties.map((prop: string) => (
+                        <span
+                          key={prop}
+                          className="text-xs bg-muted px-2 py-1 rounded-full"
+                        >
+                          {prop}
+                        </span>
+                      ))}
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {currentStep === 'format' && selectedTheme && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-center">
+                Choose your device format
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {['mobile', 'tablet', 'desktop'].map((format) => (
+                  <Button
+                    key={format}
+                    variant="outline"
+                    className={cn(
+                      "h-auto p-4",
+                      selectedFormat === format && "border-2 border-primary"
+                    )}
+                    onClick={() => handleFormatSelect(format as 'mobile' | 'desktop' | 'tablet')}
+                    disabled={isGenerating}
+                  >
+                    <span className="font-medium capitalize">{format}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isGenerating && (
+            <div className="text-center">
+              <span className="animate-pulse">Creating your mindful space...</span>
+            </div>
+          )}
+
+          {imageUrl && selectedEmotion && selectedTheme && selectedFormat && (
+            <MeditationPreviewDialog
+              imageUrl={imageUrl}
+              format={selectedFormat}
+              emotion={emotions[selectedEmotion].label}
+              theme={selectedTheme.label}
+              onClose={() => {
+                setShowPreview(false);
+                setCurrentStep('emotion');
+                setSelectedEmotion(null);
+                setSelectedTheme(null);
+                setSelectedFormat(null);
+                setImageUrl(null);
+              }}
+              open={showPreview}
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default MeditationFlow; 
+} 
