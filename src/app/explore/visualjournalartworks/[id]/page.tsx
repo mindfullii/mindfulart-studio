@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { Container } from '@/components/ui/Container';
+import { CollectionDetail } from '../../coloringpages/[id]/CollectionDetail';
 import { ArtworkCategory } from '@prisma/client';
-import { CollectionGrid } from '../coloringpages/CollectionGrid';
+import { notFound } from 'next/navigation';
 
 interface ExploreArtwork {
   id: string;
@@ -29,32 +30,30 @@ interface ExploreCollection {
   tags: string[];
 }
 
-export default async function VisualJournalArtworksPage() {
-  const collections = await prisma.exploreCollection.findMany({
+interface Props {
+  params: {
+    id: string;
+  };
+}
+
+export default async function VisualJournalArtworkDetailPage({ params }: Props) {
+  const collection = await prisma.exploreCollection.findUnique({
     where: {
+      id: params.id,
       type: ArtworkCategory.COLORFULVISUAL,
     },
     include: {
       artworks: true,
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  }) as ExploreCollection[];
+  }) as ExploreCollection | null;
+
+  if (!collection) {
+    notFound();
+  }
 
   return (
     <Container className="py-12">
-      <div className="space-y-8">
-        <div className="max-w-2xl">
-          <h1 className="text-3xl font-bold mb-4">Colorful Visual Journal</h1>
-          <p className="text-gray-600">
-            Explore our vibrant collection of visual journal artworks. Each piece is thoughtfully created 
-            to inspire your creative journey and artistic expression.
-          </p>
-        </div>
-
-        <CollectionGrid collections={collections} />
-      </div>
+      <CollectionDetail collection={collection} />
     </Container>
   );
 } 

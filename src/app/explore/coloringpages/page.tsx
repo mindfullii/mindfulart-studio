@@ -1,31 +1,46 @@
-import { Container } from '@/components/ui/Container';
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { Container } from '@/components/ui/Container';
+import { ArtworkCategory } from '@prisma/client';
+import { CollectionGrid } from './CollectionGrid';
+
+interface ExploreArtwork {
+  id: string;
+  title: string;
+  description: string | null;
+  imageUrl: string;
+  downloadUrls: {
+    png: string;
+    pdf?: string;
+  };
+}
+
+interface ExploreCollection {
+  id: string;
+  title: string;
+  description: string | null;
+  coverUrl: string;
+  type: ArtworkCategory;
+  featured: boolean;
+  downloadUrls: {
+    png: string;
+    pdf?: string;
+  };
+  artworks: ExploreArtwork[];
+  tags: string[];
+}
 
 export default async function ColoringPagesPage() {
-  // 获取管理员上传的涂色页面
-  const artworks = await prisma.artwork.findMany({
+  const collections = await prisma.exploreCollection.findMany({
     where: {
-      type: 'COLORING',
-      source: 'ADMIN',
-      category: 'COLORINGPAGES',
+      type: ArtworkCategory.COLORINGPAGES,
     },
-    orderBy: [
-      {
-        createdAt: 'desc',
-      },
-    ],
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      imageUrl: true,
-      artistName: true,
-      sourceUrl: true,
-      featured: true,
-      createdAt: true,
+    include: {
+      artworks: true,
     },
-  });
+    orderBy: {
+      createdAt: 'desc',
+    },
+  }) as ExploreCollection[];
 
   return (
     <Container className="py-12">
@@ -38,31 +53,7 @@ export default async function ColoringPagesPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {artworks.map((artwork) => (
-            <div 
-              key={artwork.id}
-              className="group relative aspect-[3/4] rounded-lg overflow-hidden bg-gray-100"
-            >
-              <img
-                src={artwork.imageUrl}
-                alt={artwork.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
-                <h3 className="text-white font-medium">{artwork.title}</h3>
-                {artwork.artistName && (
-                  <p className="text-white/80 text-sm">By {artwork.artistName}</p>
-                )}
-                {artwork.featured && (
-                  <span className="absolute top-2 right-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded">
-                    Featured
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <CollectionGrid collections={collections} />
       </div>
     </Container>
   );
