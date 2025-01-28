@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const { prompt } = requestData;
+    const { prompt, format } = requestData;
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required" }, { 
@@ -93,9 +93,24 @@ export async function POST(req: Request) {
       auth: process.env.REPLICATE_API_TOKEN,
     });
 
+    // Set dimensions based on format
+    let width = 1024;
+    let height = 1024;
+    
+    if (format === 'mobile') {
+      width = 1080;
+      height = 1920;  // 9:16 ratio
+    } else if (format === 'desktop') {
+      width = 1920;
+      height = 1080;  // 16:9 ratio
+    } else if (format === 'tablet') {
+      width = 1600;
+      height = 1200;  // 4:3 ratio
+    }
+
     const input = {
-      width: 768,
-      height: 768,
+      width,
+      height,
       prompt: prompt,
       scheduler: "K_EULER",
       num_outputs: 1,
