@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/Dialog";
 import { toast } from "sonner";
 import Image from 'next/image';
 import { useSession } from "next-auth/react";
+import { AuthModal } from '@/components/auth/AuthModal';
 
 interface ColoringPreviewProps {
   imageUrl: string
@@ -394,68 +395,13 @@ The design should be both visually engaging and calming to color, promoting a se
         </button>
       </div>
 
-      {/* 新的登录提示模态框 */}
-      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
-        <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
-          <div className="grid grid-cols-2">
-            {/* Left Column - Value Proposition */}
-            <div className="bg-[#F8FAF9] p-6 flex flex-col justify-center min-h-[420px]">
-              <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-lg">✨</span>
-              </div>
-              
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-3">
-                Join us to create your artwork
-              </h3>
-              
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600 text-center">
-                  Sign in to unlock the full creative experience:
-                </p>
-                <ul className="space-y-1.5">
-                  <li className="flex items-center text-gray-600">
-                    <span className="mr-2 text-base">✨</span>
-                    <span className="text-sm">Save your mindful artworks</span>
-                  </li>
-                  <li className="flex items-center text-gray-600">
-                    <span className="mr-2 text-base">📈</span>
-                    <span className="text-sm">Track your creative journey</span>
-                  </li>
-                  <li className="flex items-center text-gray-600">
-                    <span className="mr-2 text-base">🎨</span>
-                    <span className="text-sm">Get personalized recommendations</span>
-                  </li>
-                  <li className="flex items-center text-gray-600">
-                    <span className="mr-2 text-base">⭐</span>
-                    <span className="text-sm">Access premium features</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+      />
 
-            {/* Right Column - Sign In Options */}
-            <div className="p-6 flex flex-col justify-center">
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-6">
-                Sign in to continue
-              </h3>
-              
-              <div className="space-y-4">
-                <button
-                  onClick={() => {
-                    const returnUrl = encodeURIComponent(window.location.pathname);
-                    window.location.href = `/login?returnUrl=${returnUrl}`;
-                  }}
-                  className="w-full py-2.5 px-4 border border-gray-300 rounded-lg flex items-center justify-center space-x-2 hover:bg-gray-50 transition-colors"
-                >
-                  <span className="text-base font-medium">Continue with Email</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 生成结果展示区域 */}
+      {/* Preview Dialog */}
       {generatedImageUrl && (
         <ColoringPreview
           imageUrl={generatedImageUrl}

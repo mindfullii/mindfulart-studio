@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/Dialog";
 import { Maximize2 } from "lucide-react";
 import { MeditationPreviewDialog } from "./MeditationPreviewDialog";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 interface EmotionData {
   label: string;
@@ -76,14 +77,14 @@ export function MeditationFlow() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const { data: session } = useSession();
   const router = useRouter();
 
   const handleEmotionSelect = (emotion: string) => {
     if (!session) {
-      const returnUrl = encodeURIComponent("/create/meditation");
-      router.push(`/login?returnUrl=${returnUrl}`);
+      setShowAuthModal(true);
       return;
     }
     setSelectedEmotion(emotion);
@@ -267,6 +268,11 @@ Style: Soft, ethereal, mindful visual design with perfect composition for ${form
           )}
         </CardContent>
       </Card>
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 } 

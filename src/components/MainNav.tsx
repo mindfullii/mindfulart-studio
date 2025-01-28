@@ -25,7 +25,7 @@ const menuItems: MenuItem[] = [
     children: [
       {
         label: 'Mindful Coloring Pages',
-        href: '/explore/mindfulcoloringpages',
+        href: '/explore/coloringpages',
         description: 'Find peace in mindful coloring',
         image: '/images/nav/coloring.webp'
       },
@@ -34,12 +34,6 @@ const menuItems: MenuItem[] = [
         href: '/explore/visualjournalartworks',
         description: 'Explore visual meditation experiences',
         image: '/images/nav/journal.jpg'
-      },
-      {
-        label: "Editor's Picks",
-        href: '/explore/editorspicks',
-        description: 'Curated artworks for inspiration',
-        image: '/images/nav/picks.jpg'
       }
     ]
   },

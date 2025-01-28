@@ -30,13 +30,17 @@ interface ImageViewerProps {
 export function ImageViewer({ 
   artwork, 
   artworks, 
-  currentIndex, 
+  currentIndex = 0, 
   onIndexChange,
   isOpen,
   onOpenChange
 }: ImageViewerProps) {
   const [scale, setScale] = useState(1);
-  const [localIndex, setLocalIndex] = useState(0);
+  const [localIndex, setLocalIndex] = useState(currentIndex);
+
+  useEffect(() => {
+    setLocalIndex(currentIndex);
+  }, [currentIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -148,8 +152,8 @@ export function ImageViewer({
               className={cn(buttonClass, "hover:bg-primary/20")}
               onClick={(e) => {
                 e.stopPropagation();
-                const pdfUrl = currentArtwork.downloadUrls.png.replace('.png', '.pdf');
-                window.location.href = `/api/download?url=${encodeURIComponent(pdfUrl)}&type=pdf`;
+                const pdfUrl = currentArtwork.downloadUrls.png;
+                window.location.href = `/api/artwork/download?url=${encodeURIComponent(pdfUrl)}&format=pdf`;
               }}
             >
               <Download className="w-4 h-4 mr-1" />
