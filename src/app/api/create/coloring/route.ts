@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const { prompt: userPrompt } = requestData;
+    const { prompt: userPrompt, aspectRatio } = requestData;
 
     if (!userPrompt) {
       return NextResponse.json({ error: "Prompt is required" }, { 
@@ -84,17 +84,32 @@ export async function POST(req: Request) {
     }
 
     // Transform user input into mindful prompt
-    const { prompt: transformedPrompt, dimensions } = transformInput(userPrompt);
+    const { prompt: transformedPrompt } = transformInput(userPrompt);
     console.log("🎨 Original prompt:", userPrompt);
     console.log("✨ Transformed prompt:", transformedPrompt);
-    console.log("📐 Selected dimensions:", dimensions);
 
     if (!process.env.REPLICATE_API_TOKEN) {
       throw new Error("Missing Replicate API token");
     }
 
-    console.log("🎨 Generating coloring image with prompt:", transformedPrompt);
-    console.log("🔑 Using Replicate API token:", process.env.REPLICATE_API_TOKEN?.substring(0, 8) + "...");
+    // Calculate dimensions based on aspect ratio
+    const getDimensions = (ratio: string = '1:1') => {
+      const dimensions = {
+        '1:1': { width: 1024, height: 1024 },
+        '16:9': { width: 1344, height: 768 },
+        '9:16': { width: 768, height: 1344 },
+        '2:3': { width: 896, height: 1344 },
+        '3:2': { width: 1344, height: 896 },
+        '4:5': { width: 1024, height: 1280 },
+        '5:4': { width: 1280, height: 1024 },
+        '4:3': { width: 1344, height: 1008 },
+        '3:4': { width: 896, height: 1152 }
+      };
+      return dimensions[ratio as keyof typeof dimensions] || dimensions['1:1'];
+    };
+
+    const dimensions = getDimensions(aspectRatio);
+    console.log("📐 Using dimensions:", dimensions);
     
     const replicate = new Replicate({
       auth: process.env.REPLICATE_API_TOKEN,

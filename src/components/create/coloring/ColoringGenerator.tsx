@@ -423,8 +423,7 @@ export default function ColoringGenerator() {
         },
         body: JSON.stringify({ 
           prompt: structuredPrompt,
-          aspectRatio: selectedAspectRatio,
-          complexity: selectedComplexity
+          aspectRatio: selectedAspectRatio || '1:1'
         }),
       })
 
