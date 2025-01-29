@@ -3,36 +3,42 @@ import { Container } from '@/components/ui/Container';
 
 const categories = [
   {
-    title: 'Mindful Coloring Pages',
-    description: 'Discover printable coloring pages designed for mindfulness and relaxation.',
-    href: '/explore/mindfulcoloringpages',
+    title: '所有作品',
+    description: '浏览所有精选作品，包括填色页和视觉艺术。',
+    href: '/explore/artworks',
+    image: '/images/explore/all.jpg'
+  },
+  {
+    title: '填色页',
+    description: '发现专为正念练习设计的填色页。',
+    href: '/explore/coloringpages',
     image: '/images/explore/coloring.jpg'
   },
   {
-    title: 'Visual Journal Artworks',
-    description: 'Explore artistic expressions of daily mindfulness practice.',
+    title: '视觉艺术',
+    description: '探索艺术表达的日常正念练习。',
     href: '/explore/visualjournalartworks',
     image: '/images/explore/journal.jpg'
-  },
-  {
-    title: "Editor's Picks",
-    description: 'Curated collection of our most inspiring artworks.',
-    href: '/explore/editorspicks',
-    image: '/images/explore/picks.jpg'
   }
 ];
 
 export default function ExplorePage() {
   return (
     <Container className="py-12">
-      <h1 className="text-4xl font-heading mb-8">Explore Mindful Art</h1>
+      <div className="max-w-2xl mb-12">
+        <h1 className="text-4xl font-bold mb-4">探索作品</h1>
+        <p className="text-gray-600">
+          发现我们精心策划的作品集。每一件作品都经过精心挑选，
+          旨在帮助您通过艺术找到平静与创造力。
+        </p>
+      </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((category) => (
           <Link 
             key={category.title} 
             href={category.href}
-            className="group relative overflow-hidden rounded-lg aspect-[3/4]"
+            className="group relative overflow-hidden rounded-lg aspect-[4/3]"
           >
             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
             <img
@@ -40,11 +46,11 @@ export default function ExplorePage() {
               alt={category.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 p-4 flex flex-col justify-end">
-              <h2 className="text-xl font-heading text-white mb-2">
+            <div className="absolute inset-0 p-6 flex flex-col justify-end">
+              <h2 className="text-2xl font-bold text-white mb-2">
                 {category.title}
               </h2>
-              <p className="text-sm text-white/80 font-body line-clamp-2">
+              <p className="text-white/90 line-clamp-2">
                 {category.description}
               </p>
             </div>

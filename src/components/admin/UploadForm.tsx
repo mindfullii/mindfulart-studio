@@ -1,24 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Textarea } from '@/components/ui/Textarea';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Editor } from '@tinymce/tinymce-react';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ArtworkCategory } from '@prisma/client';
 
-interface SimilarArtwork {
+interface RelatedArtwork {
   id: string;
   imageUrl: string;
   title: string;
 }
-
-const ARTWORK_TYPES = [
-  { value: 'coloring', label: 'Coloring Pages' },
-  { value: 'vision', label: 'Visuals' },
-  { value: 'editorspick', label: 'Editors Pick' }
-];
 
 export function UploadForm() {
   const [isUploading, setIsUploading] = useState(false);
@@ -26,10 +24,28 @@ export function UploadForm() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<string>('');
+  const [type, setType] = useState<ArtworkCategory | ''>('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
-  const [similarArtworks, setSimilarArtworks] = useState<SimilarArtwork[]>([]);
+  const [availableArtworks, setAvailableArtworks] = useState<RelatedArtwork[]>([]);
+  const [selectedArtworks, setSelectedArtworks] = useState<string[]>([]);
+
+  // 获取可选的相关作品
+  useEffect(() => {
+    const fetchAvailableArtworks = async () => {
+      try {
+        const response = await fetch('/api/admin/explore/artwork');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableArtworks(data);
+        }
+      } catch (error) {
+        console.error('Error fetching artworks:', error);
+      }
+    };
+
+    fetchAvailableArtworks();
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,23 +63,18 @@ export function UploadForm() {
       if (newTag && !tags.includes(newTag)) {
         setTags([...tags, newTag]);
         setTagInput('');
-        fetchSimilarArtworks([...tags, newTag]);
       }
     }
   };
 
-  const fetchSimilarArtworks = async (currentTags: string[]) => {
-    try {
-      const response = await fetch('/api/artwork/similar?' + new URLSearchParams({
-        tags: currentTags.join(',')
-      }));
-      if (response.ok) {
-        const data = await response.json();
-        setSimilarArtworks(data.artworks);
+  const handleArtworkSelect = (artworkId: string) => {
+    setSelectedArtworks(prev => {
+      if (prev.includes(artworkId)) {
+        return prev.filter(id => id !== artworkId);
+      } else {
+        return [...prev, artworkId];
       }
-    } catch (error) {
-      console.error('Error fetching similar artworks:', error);
-    }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,9 +91,10 @@ export function UploadForm() {
     formData.append('description', description);
     formData.append('type', type);
     formData.append('tags', JSON.stringify(tags));
+    formData.append('relatedArtworks', JSON.stringify(selectedArtworks));
 
     try {
-      const response = await fetch('/api/admin/artwork/upload', {
+      const response = await fetch('/api/admin/explore/artwork', {
         method: 'POST',
         body: formData,
       });
@@ -96,7 +108,7 @@ export function UploadForm() {
         setType('');
         setTags([]);
         setTagInput('');
-        setSimilarArtworks([]);
+        setSelectedArtworks([]);
       } else {
         throw new Error('Upload failed');
       }
@@ -111,6 +123,7 @@ export function UploadForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
+        {/* 图片上传区域 */}
         <div className="flex items-center justify-center w-full">
           <label className="flex flex-col items-center justify-center w-full border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
             {previewUrl ? (
@@ -143,32 +156,48 @@ export function UploadForm() {
           </label>
         </div>
 
+        {/* 标题 */}
         <Input
           placeholder="标题"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
-        <Select value={type} onValueChange={setType}>
+        {/* 类型选择 */}
+        <Select value={type} onValueChange={(value: ArtworkCategory) => setType(value)}>
           <SelectTrigger>
             <SelectValue placeholder="选择类型" />
           </SelectTrigger>
           <SelectContent>
-            {ARTWORK_TYPES.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
+            <SelectItem value="COLORINGPAGES">填色页</SelectItem>
+            <SelectItem value="COLORFULVISUAL">视觉艺术</SelectItem>
           </SelectContent>
         </Select>
 
-        <Textarea
-          placeholder="描述"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={4}
-        />
+        {/* 富文本编辑器 */}
+        <div className="min-h-[400px]">
+          <Editor
+            apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+            value={description}
+            onEditorChange={(content) => setDescription(content)}
+            init={{
+              height: 400,
+              menubar: false,
+              plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+              ],
+              toolbar: 'undo redo | blocks | ' +
+                'bold italic forecolor | alignleft aligncenter ' +
+                'alignright alignjustify | bullist numlist outdent indent | ' +
+                'removeformat | help',
+              content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+            }}
+          />
+        </div>
 
+        {/* 标签 */}
         <div className="space-y-2">
           <Input
             placeholder="输入标签并按回车添加"
@@ -181,7 +210,7 @@ export function UploadForm() {
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 py-1 text-sm bg-gray-100 rounded-full"
+                  className="px-2 py-1 text-sm bg-gray-100 rounded-full cursor-pointer hover:bg-gray-200"
                   onClick={() => setTags(tags.filter((t) => t !== tag))}
                 >
                   {tag} ×
@@ -191,24 +220,40 @@ export function UploadForm() {
           )}
         </div>
 
-        {similarArtworks.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-lg font-medium">相似作品</h3>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {similarArtworks.map((artwork) => (
-                <div key={artwork.id} className="relative aspect-square">
-                  <Image
-                    src={artwork.imageUrl}
-                    alt={artwork.title}
-                    fill
-                    className="object-cover rounded-lg"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* 相关作品选择 */}
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="text-lg font-medium mb-4">选择相关作品</h3>
+            <ScrollArea className="h-[300px] pr-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {availableArtworks.map((artwork) => (
+                  <div key={artwork.id} className="relative">
+                    <div className="relative aspect-square mb-2">
+                      <Image
+                        src={artwork.imageUrl}
+                        alt={artwork.title}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={artwork.id}
+                        checked={selectedArtworks.includes(artwork.id)}
+                        onCheckedChange={() => handleArtworkSelect(artwork.id)}
+                      />
+                      <label htmlFor={artwork.id} className="text-sm truncate">
+                        {artwork.title}
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
 
+        {/* 提交按钮 */}
         <Button
           type="submit"
           disabled={isUploading}

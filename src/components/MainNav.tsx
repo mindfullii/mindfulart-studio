@@ -20,23 +20,7 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   { label: 'Home', href: '/' },
-  {
-    label: 'Explore',
-    children: [
-      {
-        label: 'Mindful Coloring Pages',
-        href: '/explore/coloringpages',
-        description: 'Find peace in mindful coloring',
-        image: '/images/nav/coloring.webp'
-      },
-      {
-        label: 'Visual Journal Artworks',
-        href: '/explore/visualjournalartworks',
-        description: 'Explore visual meditation experiences',
-        image: '/images/nav/journal.jpg'
-      }
-    ]
-  },
+  { label: 'Explore', href: '/explore/artworks' },
   {
     label: 'Create',
     children: [

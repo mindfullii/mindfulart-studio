@@ -6,60 +6,105 @@ import { uploadToR2 } from '@/lib/storage'
 import { v4 as uuidv4 } from 'uuid'
 import { ArtworkCategory } from '@prisma/client'
 
-export async function POST(request: Request) {
+// 获取所有作品
+export async function GET() {
   try {
-    // 1. 验证管理员身份
+    // 验证管理员身份
     const session = await getServerSession(authOptions)
     if (!session?.user?.email || session.user.email !== 'kevinkang604@gmail.com') {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    // 2. 解析表单数据
+    const artworks = await prisma.exploreArtwork.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      },
+      select: {
+        id: true,
+        title: true,
+        imageUrl: true,
+        type: true,
+        tags: true,
+        relatedTo: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json(artworks)
+  } catch (error) {
+    console.error('Failed to fetch artworks:', error)
+    return new NextResponse('Internal Server Error', { status: 500 })
+  }
+}
+
+// 上传新作品
+export async function POST(request: Request) {
+  try {
+    // 验证管理员身份
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email || session.user.email !== 'kevinkang604@gmail.com') {
+      return new NextResponse('Unauthorized', { status: 401 })
+    }
+
     const formData = await request.formData()
-    const collectionId = formData.get('collectionId') as string
+    const image = formData.get('image') as File
     const title = formData.get('title') as string
     const description = formData.get('description') as string
-    const image = formData.get('image') as File
+    const type = formData.get('type') as string
+    const tags = JSON.parse(formData.get('tags') as string) as string[]
+    const relatedArtworks = JSON.parse(formData.get('relatedArtworks') as string) as string[]
 
-    if (!collectionId || !title || !image) {
+    if (!image || !title || !description || !type) {
       return new NextResponse('Missing required fields', { status: 400 })
     }
 
-    // 3. 上传图片到 R2
-    const imageExt = image.name.split('.').pop()
-    const imageKey = `explore/collections/${collectionId}/artworks/${uuidv4()}/image.${imageExt}`
+    // 生成唯一的文件名
+    const fileExt = image.name.split('.').pop()
+    const fileName = `${uuidv4()}.${fileExt}`
+
+    // 根据类型选择存储路径
+    const storagePath = type === 'COLORINGPAGES' ? 'artworks' : 'explore'
     
+    // 上传图片到 R2
     const imageBuffer = Buffer.from(await image.arrayBuffer())
+    const imageKey = `${storagePath}/${fileName}`
     const imageUrl = await uploadToR2(imageBuffer, imageKey)
 
-    // 获取作品集类型
-    const collection = await prisma.exploreCollection.findUnique({
-      where: { id: collectionId }
-    })
-
-    if (!collection) {
-      return new NextResponse('Collection not found', { status: 404 })
-    }
-
-    // 4. 创建作品记录
+    // 创建作品记录
     const artwork = await prisma.exploreArtwork.create({
       data: {
         title,
         description,
         imageUrl,
+        type: type as ArtworkCategory,
+        tags,
         downloadUrls: {
           png: imageUrl,
-          pdf: '' // TODO: 生成 PDF
+          pdf: imageUrl // 如果需要PDF版本，这里需要额外处理
         },
-        type: collection.type,
-        collectionId,
-        tags: []
+        relatedTo: {
+          connect: relatedArtworks.map(id => ({ id }))
+        }
+      },
+      include: {
+        relatedTo: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true
+          }
+        }
       }
     })
 
     return NextResponse.json(artwork)
   } catch (error) {
-    console.error('Artwork upload error:', error)
+    console.error('Failed to create artwork:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 } 

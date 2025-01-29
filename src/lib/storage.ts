@@ -2,10 +2,10 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const R2 = new S3Client({
   region: 'auto',
-  endpoint: 'https://51159ff01e1247a31b68933143db0701.r2.cloudflarestorage.com',
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: '0e19d0c44640ff3ed412d5270770dd77',
-    secretAccessKey: 'cdc2df03ebc159f8b89302b920573ac1cf07602b06690f3ecebda858212097f7',
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -32,7 +32,7 @@ export async function uploadToR2(buffer: Buffer, filename: string): Promise<stri
   console.log('🚀 Starting R2 upload for:', filename);
   try {
     const command = new PutObjectCommand({
-      Bucket: 'mindful-art-storage',
+      Bucket: process.env.R2_BUCKET_NAME,
       Key: filename,
       Body: buffer,
       ContentType: 'image/png',

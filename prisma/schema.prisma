@@ -161,6 +161,10 @@ model ExploreArtwork {
   collectionId     String?
   collection       ExploreCollection? @relation(fields: [collectionId], references: [id])
 
+  // 相关作品关联
+  relatedTo        ExploreArtwork[] @relation("RelatedArtworks")
+  relatedFrom      ExploreArtwork[] @relation("RelatedArtworks")
+
   @@index([type])
   @@index([collectionId])
 }
