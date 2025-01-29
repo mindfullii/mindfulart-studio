@@ -22,38 +22,11 @@ export function MeditationPreviewDialog({
   onClose,
   open
 }: MeditationPreviewDialogProps) {
-  const handleDownload = async () => {
-    try {
-      const response = await fetch('/api/artwork/download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          imageUrl,
-          fileName: `meditation-${emotion}-${theme}.png`
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `meditation-${emotion}-${theme}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success('Image downloaded successfully');
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download image');
-    }
-  };
+  // 处理文件名：移除特殊字符，替换空格为下划线
+  const safeFileName = `meditation-${emotion}-${theme}`
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .replace(/\s+/g, '_')
+    .toLowerCase();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -111,14 +84,41 @@ export function MeditationPreviewDialog({
               </div>
             </div>
 
-            <Button 
-              className="w-full mt-auto" 
-              onClick={handleDownload}
-              size="lg"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download
-            </Button>
+            <div className="flex flex-col gap-3 mt-auto">
+              <Button 
+                asChild
+                size="lg"
+                className="w-full"
+              >
+                <a
+                  href={`/api/artwork/download?url=${encodeURIComponent(imageUrl)}&format=png&title=${encodeURIComponent(safeFileName)}`}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => toast.success('Image downloaded successfully')}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PNG
+                </a>
+              </Button>
+              <Button 
+                asChild
+                variant="outline"
+                size="lg"
+                className="w-full"
+              >
+                <a
+                  href={`/api/artwork/download?url=${encodeURIComponent(imageUrl)}&format=pdf&title=${encodeURIComponent(safeFileName)}`}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => toast.success('PDF downloaded successfully')}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </a>
+              </Button>
+            </div>
           </div>
 
           {/* Close Button */}
