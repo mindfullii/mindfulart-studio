@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { Prisma } from '@prisma/client'
 import { ArtworkGrid } from '@/components/explore/ArtworkGrid'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth.config'
 
 interface Props {
   params: {
@@ -19,6 +21,9 @@ interface DownloadUrls {
 }
 
 export default async function ArtworkPage({ params }: Props) {
+  const session = await getServerSession(authOptions)
+  const isAdmin = session?.user?.email === 'kevinkang604@gmail.com'
+
   const artwork = await prisma.exploreArtwork.findUnique({
     where: {
       id: params.id
@@ -75,7 +80,16 @@ export default async function ArtworkPage({ params }: Props) {
           {/* 右侧：信息 (30%) */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold mb-4">{artwork.title}</h1>
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-3xl font-bold">{artwork.title}</h1>
+                {isAdmin && (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/explore/artworks/${artwork.id}/edit`}>
+                      编辑
+                    </Link>
+                  </Button>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2 mb-4">
                 {artwork.tags.map((tag) => (
                   <span
