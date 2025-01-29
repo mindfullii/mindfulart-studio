@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { Prisma } from '@prisma/client'
+import { ArtworkGrid } from '@/components/explore/ArtworkGrid'
 
 interface Props {
   params: {
@@ -28,7 +29,16 @@ export default async function ArtworkPage({ params }: Props) {
           id: true,
           title: true,
           imageUrl: true,
-          type: true
+          type: true,
+          description: true,
+          tags: true,
+          relatedTo: {
+            select: {
+              id: true,
+              title: true,
+              imageUrl: true
+            }
+          }
         }
       }
     }
@@ -40,22 +50,29 @@ export default async function ArtworkPage({ params }: Props) {
 
   const downloadUrls = artwork.downloadUrls as unknown as DownloadUrls
 
+  // 处理文件名：移除特殊字符，替换空格为下划线
+  const safeFileName = artwork.title
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .replace(/\s+/g, '_')
+    .toLowerCase()
+
   return (
     <Container className="py-12">
-      <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* 左侧：图片 */}
-          <div className="relative aspect-square rounded-lg overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[70%_30%] gap-8 items-start">
+          {/* 左侧：图片 (70%) */}
+          <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-gray-50">
             <Image
               src={artwork.imageUrl}
               alt={artwork.title}
               fill
               className="object-contain"
               priority
+              sizes="(min-width: 768px) 70vw, 100vw"
             />
           </div>
 
-          {/* 右侧：信息 */}
+          {/* 右侧：信息 (30%) */}
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold mb-4">{artwork.title}</h1>
@@ -69,32 +86,30 @@ export default async function ArtworkPage({ params }: Props) {
                   </span>
                 ))}
               </div>
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: artwork.description || '' }} />
+              <div className="prose max-w-none prose-headings:font-heading prose-h1:text-[2.8em] prose-h1:leading-[1.2] prose-h1:font-semibold prose-h2:font-subheading prose-h2:text-[1.8em] prose-h2:leading-[1.3] prose-h2:font-medium prose-h3:font-subheading prose-h3:text-[1.5em] prose-h3:leading-[1.4] prose-h3:font-normal prose-p:font-body prose-p:text-base prose-p:leading-[1.6] prose-p:text-text-primary" dangerouslySetInnerHTML={{ __html: artwork.description || '' }} />
             </div>
 
-            <div className="flex gap-4">
-              <Button asChild>
+            <div className="flex flex-col gap-3">
+              <Button asChild size="lg" className="w-full">
                 <a
-                  href={downloadUrls.png}
+                  href={`/api/artwork/download?url=${encodeURIComponent(artwork.imageUrl)}&format=png&title=${encodeURIComponent(safeFileName)}`}
                   download
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  下载 PNG
+                  Download PNG
                 </a>
               </Button>
-              {downloadUrls.pdf && (
-                <Button asChild variant="outline">
-                  <a
-                    href={downloadUrls.pdf}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    下载 PDF
-                  </a>
-                </Button>
-              )}
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <a
+                  href={`/api/artwork/download?url=${encodeURIComponent(artwork.imageUrl)}&format=pdf&title=${encodeURIComponent(safeFileName)}`}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Download PDF
+                </a>
+              </Button>
             </div>
           </div>
         </div>
@@ -102,26 +117,8 @@ export default async function ArtworkPage({ params }: Props) {
         {/* 相关作品 */}
         {artwork.relatedTo.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-2xl font-bold mb-6">相关作品</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {artwork.relatedTo.map((related) => (
-                <Link
-                  key={related.id}
-                  href={`/explore/artworks/${related.id}`}
-                  className="group"
-                >
-                  <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
-                    <Image
-                      src={related.imageUrl}
-                      alt={related.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <h3 className="font-medium line-clamp-2">{related.title}</h3>
-                </Link>
-              ))}
-            </div>
+            <h2 className="text-2xl font-bold mb-6">Related Artworks</h2>
+            <ArtworkGrid artworks={artwork.relatedTo} />
           </div>
         )}
       </div>

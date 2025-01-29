@@ -192,7 +192,49 @@ export function UploadForm() {
                 'bold italic forecolor | alignleft aligncenter ' +
                 'alignright alignjustify | bullist numlist outdent indent | ' +
                 'removeformat | help',
-              content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+              content_style: `
+                body { 
+                  font-family: 'Quattrocento Sans', sans-serif; 
+                  font-size: 1rem; 
+                  line-height: 1.6;
+                  color: #1A1A1A;
+                }
+                h1 { 
+                  font-family: 'EB Garamond', serif;
+                  font-size: 2.8em;
+                  font-weight: 600;
+                  line-height: 1.2;
+                }
+                h2 { 
+                  font-family: 'Spectral', serif;
+                  font-size: 1.8em;
+                  font-weight: 500;
+                  line-height: 1.3;
+                }
+                h3 { 
+                  font-family: 'Spectral', serif;
+                  font-size: 1.5em;
+                  font-weight: 400;
+                  line-height: 1.4;
+                }
+              `,
+              style_formats: [
+                { title: '正文', block: 'p', classes: 'body-text' },
+                { title: '标题1', block: 'h1', classes: 'heading-1' },
+                { title: '标题2', block: 'h2', classes: 'heading-2' },
+                { title: '标题3', block: 'h3', classes: 'heading-3' }
+              ],
+              color_map: [
+                "#1A1A1A", "主要文本",
+                "#4A4A4A", "次要文本",
+                "#717171", "辅助文本",
+                "#6DB889", "主色",
+                "#88B3BA", "次要色",
+                "#4CAF50", "成功",
+                "#FFA726", "警告",
+                "#EF5350", "错误",
+                "#42A5F5", "信息"
+              ]
             }}
           />
         </div>

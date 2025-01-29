@@ -1,104 +1,76 @@
-import { NextResponse } from "next/server";
-import { PDFDocument } from 'pdf-lib';
-import sharp from 'sharp';
+import { NextRequest, NextResponse } from 'next/server'
+import { PDFDocument } from 'pdf-lib'
+import sharp from 'sharp'
 
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   try {
-    // Get parameters from URL
-    const url = new URL(request.url);
-    const imageUrl = url.searchParams.get('url');
-    const format = url.searchParams.get('format')?.toLowerCase(); // 'png' or 'pdf'
+    const url = req.nextUrl.searchParams.get('url')
+    const format = req.nextUrl.searchParams.get('format') || 'png'
+    const title = req.nextUrl.searchParams.get('title') || 'artwork'
 
-    if (!imageUrl) {
-      return NextResponse.json({ error: "Image URL is required" }, { status: 400 });
+    if (!url) {
+      return new NextResponse('Missing url parameter', { status: 400 })
     }
 
-    if (!format || !['png', 'pdf'].includes(format)) {
-      return NextResponse.json({ error: "Invalid format" }, { status: 400 });
-    }
+    // 获取图片数据
+    const imageResponse = await fetch(url)
+    const imageBuffer = await imageResponse.arrayBuffer()
 
-    // Fetch image content
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error('Failed to fetch image');
-    }
+    // 使用sharp将图片转换为PNG格式
+    const pngBuffer = await sharp(Buffer.from(imageBuffer))
+      .png()
+      .toBuffer()
 
-    // Get the image data as Buffer
-    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-    
-    // If PNG, return directly
+    // 如果是PNG格式，直接返回
     if (format === 'png') {
-      // Convert to PNG if not already
-      const pngBuffer = await sharp(imageBuffer).png().toBuffer();
       return new NextResponse(pngBuffer, {
         headers: {
           'Content-Type': 'image/png',
-          'Content-Disposition': `attachment; filename="artwork.png"`,
+          'Content-Disposition': `attachment; filename="${title}.png"`,
         },
-      });
+      })
     }
 
-    // If PDF, convert the image
+    // 如果是PDF格式，转换PNG为PDF
     if (format === 'pdf') {
       try {
-        console.log('Starting PDF conversion...');
+        // 使用sharp获取图片尺寸
+        const metadata = await sharp(pngBuffer).metadata()
+        const { width = 0, height = 0 } = metadata
+
+        // 创建PDF文档
+        const pdfDoc = await PDFDocument.create()
+        const page = pdfDoc.addPage([width, height])
+
+        // 将PNG嵌入PDF
+        const pngImage = await pdfDoc.embedPng(new Uint8Array(pngBuffer))
         
-        // First convert image to PNG using sharp
-        console.log('Converting image to PNG format...');
-        const pngBuffer = await sharp(imageBuffer).png().toBuffer();
-        console.log('Image converted to PNG successfully');
-        
-        // Create a new PDF document
-        const pdfDoc = await PDFDocument.create();
-        console.log('PDF document created');
-        
-        // Get image dimensions
-        const metadata = await sharp(pngBuffer).metadata();
-        const { width = 800, height = 600 } = metadata;
-        
-        // Embed the PNG image
-        console.log('Attempting to embed PNG image...');
-        const pngImage = await pdfDoc.embedPng(pngBuffer);
-        console.log('PNG image embedded successfully');
-        
-        // Add a new page with the image dimensions
-        const page = pdfDoc.addPage([width, height]);
-        console.log('Page added with dimensions:', width, 'x', height);
-        
-        // Draw the image on the page
+        // 在PDF页面上绘制图片
         page.drawImage(pngImage, {
           x: 0,
           y: 0,
           width: width,
           height: height,
-        });
-        console.log('Image drawn on page');
-        
-        // Save the PDF
-        console.log('Saving PDF...');
-        const pdfBytes = await pdfDoc.save();
-        console.log('PDF saved successfully');
-        
+        })
+
+        // 生成PDF
+        const pdfBytes = await pdfDoc.save()
+
         return new NextResponse(pdfBytes, {
           headers: {
             'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="artwork.pdf"`,
+            'Content-Disposition': `attachment; filename="${title}.pdf"`,
           },
-        });
-      } catch (pdfError: any) {
-        console.error("PDF conversion failed:", pdfError);
-        console.error("Error details:", pdfError.message);
-        console.error("Error stack:", pdfError.stack);
-        throw new Error(`Failed to convert image to PDF: ${pdfError.message}`);
+        })
+      } catch (error) {
+        console.error('PDF conversion error:', error)
+        return new NextResponse('Failed to convert to PDF', { status: 500 })
       }
     }
 
-    return NextResponse.json({ error: "Invalid format" }, { status: 400 });
-  } catch (error: any) {
-    console.error("Download failed:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to download image" },
-      { status: 500 }
-    );
+    return new NextResponse('Invalid format', { status: 400 })
+  } catch (error) {
+    console.error('Download error:', error)
+    return new NextResponse('Internal Server Error', { status: 500 })
   }
 } 
