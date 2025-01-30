@@ -51,17 +51,17 @@ const menuItems: MenuItem[] = [
     children: [
       {
         label: 'Our Story',
-        href: '/about/ourstory',
+        href: '/about',
         description: 'Learn about our journey'
       },
       {
         label: 'Contact Us',
-        href: '/about/contactus',
+        href: '/about/contact',
         description: 'Get in touch with us'
       },
       {
         label: 'Write For Us',
-        href: '/about/writeforus',
+        href: '/about/write-for-us',
         description: 'Join our community of writers'
       },
       {
