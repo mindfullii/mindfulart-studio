@@ -4,7 +4,7 @@ import { Container } from '@/components/ui/Container';
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-white border-t border-gray-100">
+    <footer className="w-full bg-bg-subtle border-t border-gray-100">
       {/* Main Footer Content */}
       <Container size="wide" className="py-12">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
@@ -70,7 +70,7 @@ const Footer = () => {
       </Container>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-100 bg-white">
+      <div className="border-t border-gray-100 bg-bg-subtle">
         <Container size="wide" className="py-4">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-[#717171]">
             <div className="flex items-center space-x-1">

@@ -13,7 +13,7 @@ export function Header() {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-bg-subtle backdrop-blur supports-[backdrop-filter]:bg-bg-subtle/60">
       <Container size="wide">
         <div className="flex h-20 items-center justify-between">
           <MainNav />

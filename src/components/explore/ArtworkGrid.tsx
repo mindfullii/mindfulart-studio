@@ -44,14 +44,14 @@ export function ArtworkGrid({ artworks }: ArtworkGridProps) {
           href={`/explore/artworks/${artwork.id}`}
           className="block mb-4 group"
         >
-          <div className="relative overflow-hidden rounded-lg">
+          <div className="relative overflow-hidden rounded-lg bg-gray-50">
             <div className="relative aspect-[3/4]">
               <Image
                 src={artwork.imageUrl}
                 alt={artwork.title}
                 fill
                 sizes="(min-width: 1536px) 25vw, (min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                className="object-contain transition-transform duration-300 group-hover:scale-105"
               />
             </div>
             
