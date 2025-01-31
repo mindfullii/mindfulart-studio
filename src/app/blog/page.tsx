@@ -2,7 +2,7 @@ import { BlogList } from '@/components/blog/BlogList';
 import { BlogBanner } from '@/components/blog/BlogBanner';
 import { Container } from '@/components/ui/Container';
 import { getBlogPosts } from '@/lib/contentful';
-import { Pagination } from '@/components/ui/Pagination';
+import { ServerPagination } from '@/components/ui/ServerPagination';
 
 interface BlogPageProps {
   searchParams: {
@@ -21,7 +21,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         <BlogList posts={result.items} />
         {result.totalPages > 1 && (
           <div className="mt-12">
-            <Pagination
+            <ServerPagination
               currentPage={result.page}
               totalPages={result.totalPages}
               baseUrl="/blog"

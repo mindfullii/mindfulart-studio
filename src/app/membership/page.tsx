@@ -7,17 +7,17 @@ const features = [
   {
     title: 'Mindful Coloring Pages',
     description: 'Create personalized coloring pages with our AI-powered system',
-    imagePath: '/images/features/mindful-coloring.jpg'
+    imagePath: '/images/features/coloring.jpg'
   },
   {
     title: 'Visual Meditations',
     description: 'Generate calming visuals to enhance your meditation practice',
-    imagePath: '/images/features/visual-meditation.jpg'
+    imagePath: '/images/features/meditation.jpg'
   },
   {
     title: 'Art Journaling',
     description: 'Express yourself through AI-assisted art journaling tools',
-    imagePath: '/images/features/art-journaling.jpg'
+    imagePath: '/images/features/vision.jpg'
   }
 ];
 
