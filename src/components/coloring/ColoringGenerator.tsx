@@ -353,17 +353,36 @@ The design should be both visually engaging and calming to color, promoting a se
     <div className="max-w-4xl mx-auto space-y-8 py-8">
       {/* 温暖的欢迎区域 */}
       <div className="text-center space-y-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Meet your mindful coloring companion ✨
+        <h1 className="font-['EB_Garamond'] text-[2.8em] font-semibold leading-[1.2] mb-4">
+          Coloring Meditation
         </h1>
         
         <div className="max-w-2xl mx-auto space-y-4 text-gray-600">
-          <p className="text-base leading-relaxed">
-            What makes it special? It doesn't just draw what you say - it thoughtfully weaves in elements that bring peace and warmth to your heart. As you color, you'll naturally find yourself in a state of calm and mindfulness.
+          <p className="font-['Quattrocento_Sans'] text-base font-light leading-[1.6]">
+            Paint your thoughts with gentle strokes. Find peace in every line.
           </p>
           
-          <p className="text-base leading-relaxed">
-            No complex settings, no confusing choices. Leave everything to your AI companion who understands and cares about your well-being. Every artwork is a personalized mindful experience created just for you 🎨
+          <p className="font-['Quattrocento_Sans'] text-[15px] font-light leading-[1.6]">
+            Create your personal coloring meditation in two simple steps:
+          </p>
+
+          <div className="mt-8 space-y-8">
+            <div>
+              <h3 className="font-['Quattrocento_Sans'] text-[17px] font-semibold mb-2">Share Your Vision</h3>
+              <p className="font-['Quattrocento_Sans'] text-[15px] font-light leading-[1.6]">
+                Let your thoughts flow freely - whether it's a peaceful landscape, a beloved character, or a feeling you want to express. Your words will guide our creation.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-['Quattrocento_Sans'] text-[17px] font-semibold mb-2">Begin Your Practice</h3>
+              <p className="font-['Quattrocento_Sans'] text-[15px] font-light leading-[1.6]">
+                Within moments, your unique coloring page will be ready. Find your quiet space, pick up your colors, and let each stroke guide you to inner peace.
+              </p>
+            </div>
+          </div>
+
+          <p className="font-['Quattrocento_Sans'] text-[15px] font-light leading-[1.6] mt-8 italic">
+            Remember: There are no rules in mindful coloring. Each line you color is a moment of peace, each page a new journey to tranquility.
           </p>
         </div>
       </div>
@@ -371,13 +390,13 @@ The design should be both visually engaging and calming to color, promoting a se
       {/* 简化的输入区域 */}
       <div className="bg-white rounded-lg p-8 shadow-lg space-y-6">
         <div className="text-gray-600">
-          <p className="text-base leading-relaxed mb-4">
+          <p className="font-['Quattrocento_Sans'] text-[15px] font-light leading-[1.6] mb-4">
             Just tell us what you'd like to draw - your favorite character, an animal, a landscape, or even a simple idea. We'll understand your thoughts and create a unique coloring page just for you.
           </p>
         </div>
         
         <textarea
-          className="w-full h-32 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-base"
+          className="w-full h-32 p-4 border border-gray-200 rounded-lg focus:outline-none focus:border-[#6DB889] resize-none text-base"
           placeholder="Share your idea with me..."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
