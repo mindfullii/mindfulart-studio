@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/Spinner';
 import { Subscription } from '@prisma/client';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 
 export default function SubscriptionPage() {
   const router = useRouter();
@@ -68,14 +69,17 @@ export default function SubscriptionPage() {
 
   return (
     <Container>
-      <div className="py-12">
-        <h1 className="text-3xl font-heading mb-8 text-center">Subscription</h1>
-        <div className="max-w-3xl mx-auto">
-          {subscription ? (
-            <SubscriptionInfo subscription={subscription} />
-          ) : (
-            <SubscriptionPlans userId={session.user.id} />
-          )}
+      <div className="flex">
+        <DashboardSidebar />
+        <div className="flex-1 py-12 pl-8">
+          <div className="max-w-4xl">
+            <h1 className="text-3xl font-serif mb-8">My Subscription</h1>
+            {subscription ? (
+              <SubscriptionInfo subscription={subscription} />
+            ) : (
+              <SubscriptionPlans userId={session.user.id} />
+            )}
+          </div>
         </div>
       </div>
     </Container>

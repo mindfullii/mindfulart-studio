@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { toast } from 'sonner';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 
 export default function AccountPage() {
   const { data: session } = useSession();
@@ -48,93 +49,97 @@ export default function AccountPage() {
 
   return (
     <Container>
-      <div className="py-12">
-        <h1 className="text-3xl font-serif mb-8">Account Details</h1>
-        
-        <div className="grid gap-8 max-w-3xl">
-          {/* Profile Information */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-medium">Profile Information</h2>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Name</Label>
-                <p className="text-gray-600">{session?.user?.name || 'Not set'}</p>
-              </div>
-              <div>
-                <Label>Email</Label>
-                <p className="text-gray-600">{session?.user?.email || 'Not set'}</p>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="flex">
+        <DashboardSidebar />
+        <div className="flex-1 py-12 pl-8">
+          <div className="max-w-4xl">
+            <h1 className="text-3xl font-serif mb-8">Account Details</h1>
+            <div className="grid gap-8">
+              {/* Profile Information */}
+              <Card>
+                <CardHeader>
+                  <h2 className="text-xl font-medium">Profile Information</h2>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Name</Label>
+                    <p className="text-gray-600">{session?.user?.name || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <p className="text-gray-600">{session?.user?.email || 'Not set'}</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Password Change */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-medium">Password</h2>
-            </CardHeader>
-            <CardContent>
-              {!isEditingPassword ? (
-                <Button 
-                  variant="outline"
-                  onClick={() => setIsEditingPassword(true)}
-                >
-                  Change Password
-                </Button>
-              ) : (
-                <form onSubmit={handlePasswordChange} className="space-y-4">
-                  <div>
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="flex space-x-4">
-                    <Button type="submit" className="bg-[#6DB889] hover:bg-[#5CA978]">
-                      Save Changes
-                    </Button>
+              {/* Password Change */}
+              <Card>
+                <CardHeader>
+                  <h2 className="text-xl font-medium">Password</h2>
+                </CardHeader>
+                <CardContent>
+                  {!isEditingPassword ? (
                     <Button 
-                      type="button" 
                       variant="outline"
-                      onClick={() => {
-                        setIsEditingPassword(false);
-                        setCurrentPassword('');
-                        setNewPassword('');
-                        setConfirmPassword('');
-                      }}
+                      onClick={() => setIsEditingPassword(true)}
                     >
-                      Cancel
+                      Change Password
                     </Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-          </Card>
+                  ) : (
+                    <form onSubmit={handlePasswordChange} className="space-y-4">
+                      <div>
+                        <Label htmlFor="currentPassword">Current Password</Label>
+                        <Input
+                          id="currentPassword"
+                          type="password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="flex space-x-4">
+                        <Button type="submit" className="bg-[#6DB889] hover:bg-[#5CA978]">
+                          Save Changes
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => {
+                            setIsEditingPassword(false);
+                            setCurrentPassword('');
+                            setNewPassword('');
+                            setConfirmPassword('');
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </Container>
