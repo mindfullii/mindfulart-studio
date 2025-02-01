@@ -131,15 +131,13 @@ export default function CreditsPage() {
                             </span>
                           </div>
                         ))}
-                        {totalPages > 1 && (
-                          <div className="mt-8 pt-4 border-t border-gray-100">
-                            <Pagination
-                              currentPage={currentPage}
-                              totalPages={totalPages}
-                              onPageChange={setCurrentPage}
-                            />
-                          </div>
-                        )}
+                        <div className="mt-8 pt-4 border-t border-gray-100">
+                          <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                          />
+                        </div>
                       </>
                     ) : (
                       <p className="text-text-secondary text-center py-8">
