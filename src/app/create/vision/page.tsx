@@ -268,7 +268,7 @@ export default function VisionPage() {
                     onClick={() => setSelectedRatio(ratio.id)}
                   >
                     <CardContent className="p-4">
-                      <h3 className="font-medium">{ratio.name}</h3>
+                      <h3 className="font-medium text-base">{ratio.name}</h3>
                       <p className="text-sm text-muted-foreground mt-1">{ratio.usage}</p>
                     </CardContent>
                   </Card>
@@ -311,23 +311,41 @@ export default function VisionPage() {
 
   return (
     <div className="w-full">
-      {/* Title and Introduction Section - Default Background */}
-      <div className="w-full max-w-4xl mx-auto space-y-4 text-center pt-16 mb-8">
-        <h1 className="text-[2em] font-bold">
-          Decorate Your Space with Inner Vision ✨
-        </h1>
-        <div className="space-y-4 text-muted-foreground">
-          <p>
-            What makes it special? Inner Vision doesn't just create art - it thoughtfully captures your emotions and transforms them into healing visual experiences. Each piece is designed to bring peace, uplift your energy, and create spaces that resonate with your soul.
+      <main className="max-w-4xl mx-auto space-y-8 py-16 bg-white">
+        <div className="text-center space-y-6">
+          <h1 className="font-['EB_Garamond'] text-[2.8em] font-semibold leading-[1.2] mb-4">
+            Soul Art Space
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Your canvas of infinite possibilities. Where heart meets art.
           </p>
-          <p>
-            No need to be an artist or explain complex feelings. Your AI companion understands the language of emotions and translates them into meaningful artwork. Whether it's a serene piece for your meditation corner, an uplifting scene for your workspace, or a series of healing artworks for your home - each creation is personally crafted to support your emotional wellbeing 🎨
-          </p>
-          <p className="italic">
-            Let's create art that transforms your space and nurtures your spirit.
-          </p>
+          <div className="space-y-4 text-muted-foreground">
+            <p>
+              Where emotions transform into artful presence. Create personal masterpieces that speak to your soul and fill your spaces with mindful beauty.
+            </p>
+            <div className="space-y-6 mt-8">
+              <div>
+                <h3 className="text-base font-semibold mb-2">1. Share Your Vision</h3>
+                <p>
+                  Whether it's a tranquil forest at dawn or waves dancing in moonlight - let your imagination flow freely. Your words will paint the first strokes of your journey.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold mb-2">2. Choose Your Artist's Voice</h3>
+                <p>
+                  From the fluid grace of watercolors to the bold strokes of impressionism, select a style that resonates with your inner vision. Each style brings its own way of speaking to the soul.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold mb-2">3. Frame Your Perspective</h3>
+                <p>
+                  Select the perfect canvas size to complement your space - whether it's a statement piece for your meditation room or a gentle presence for your daily workspace.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
 
       {/* Content Section - White Background */}
       <Card className="w-full max-w-4xl mx-auto bg-white">

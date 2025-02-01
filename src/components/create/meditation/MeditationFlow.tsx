@@ -135,24 +135,47 @@ Style: Soft, ethereal, mindful visual design with perfect composition for ${form
   };
 
   return (
-    <div className="w-full">
-      {/* Title and Introduction Section - Default Background */}
-      <div className="w-full max-w-4xl mx-auto space-y-4 text-center pt-8 mb-8">
-        <h1 className="text-[2em] font-bold">
-          Meet your mindful wallpaper companion ✨
+    <div className="max-w-4xl mx-auto space-y-8 py-16 bg-white">
+      {/* Title and Introduction Section */}
+      <div className="text-center space-y-6">
+        <h1 className="font-['EB_Garamond'] text-[2.8em] font-semibold leading-[1.2] mb-4">
+          Meditation Visuals
         </h1>
+        <p className="text-lg text-muted-foreground">
+          Where stillness meets creativity. Transform your device into a portal of peace.
+        </p>
         <div className="space-y-4 text-muted-foreground">
           <p>
-            What makes it special? It's not just a wallpaper – it's a visual anchor that brings peace to your daily digital life. Each time you look at your screen, you'll naturally find yourself drawn into a moment of calm and presence.
+            Create your personal meditation wallpaper in three simple steps:
           </p>
-          <p>
-            No complex settings, no overwhelming choices. Let your AI companion create the perfect meditation visual that resonates with your emotional state. Every wallpaper is a personalized mindful space crafted just for you, available in sizes that fit all your devices perfectly 🌸
+          <div className="space-y-6 mt-8">
+            <div>
+              <h3 className="text-base font-semibold mb-2">1. How are you feeling today?</h3>
+              <p>
+                Choose the emotion that resonates with your current state - whether seeking calm, feeling overwhelmed, or looking for inspiration. Let your heart guide your choice.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold mb-2">2. Select your visual anchor</h3>
+              <p>
+                From flowing water to blooming gardens, choose a theme that speaks to your soul. Each visual is crafted to support your emotional journey.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold mb-2">3. Choose your device</h3>
+              <p>
+                Tell us where you'll meditate - mobile, tablet, or desktop. We'll optimize your wallpaper for the perfect viewing experience on your chosen device.
+              </p>
+            </div>
+          </div>
+          <p className="mt-6 italic">
+            Your meditation visual will be ready to download as a wallpaper, creating a mindful moment whenever you look at your screen.
           </p>
         </div>
       </div>
 
       {/* Content Section - White Background */}
-      <Card className="w-full max-w-4xl mx-auto bg-white">
+      <Card className="w-full bg-white">
         <CardContent className="p-6 space-y-8">
           {currentStep === 'emotion' && (
             <div className="space-y-4">

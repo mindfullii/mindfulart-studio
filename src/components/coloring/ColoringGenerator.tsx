@@ -350,7 +350,7 @@ The design should be both visually engaging and calming to color, promoting a se
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 py-8">
+    <div className="max-w-4xl mx-auto space-y-8 py-8 bg-white">
       {/* 温暖的欢迎区域 */}
       <div className="text-center space-y-6">
         <h1 className="font-['EB_Garamond'] text-[2.8em] font-semibold leading-[1.2] mb-4">

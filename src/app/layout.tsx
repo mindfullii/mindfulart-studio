@@ -58,7 +58,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${spaceMono.variable} font-body antialiased bg-[#F5F7F6]`}>
+      <body className={`${inter.variable} ${spaceMono.variable} font-body antialiased bg-white`}>
         <ThemeProvider>
           <AuthProvider>
             <Header />
