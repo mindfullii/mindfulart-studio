@@ -28,17 +28,6 @@ const typeLabels: Record<ArtworkType, { label: string; color: string }> = {
   MEDITATION: { label: 'Meditation', color: 'bg-green-100 text-green-800' },
 };
 
-// 添加测试数据
-const mockArtworks: Artwork[] = Array.from({ length: 30 }, (_, i) => ({
-  id: `test-${i + 1}`,
-  title: `Test Artwork ${i + 1}`,
-  description: 'Test description',
-  prompt: 'Test prompt',
-  imageUrl: '/images/generated/generated_1737585316148.png',
-  createdAt: new Date().toISOString(),
-  type: ['VISION', 'COLORING', 'MEDITATION'][i % 3] as ArtworkType,
-}));
-
 export function ArtworkGrid() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
@@ -55,13 +44,10 @@ export function ArtworkGrid() {
           throw new Error('Failed to fetch artworks');
         }
         const data = await response.json();
-        // 使用测试数据
-        setArtworks(mockArtworks);
+        setArtworks(data);
       } catch (err) {
         console.error('Error details:', err);
-        // 发生错误时也使用测试数据
-        setArtworks(mockArtworks);
-        setError(null);
+        setError('Failed to load artworks');
       } finally {
         setLoading(false);
       }
