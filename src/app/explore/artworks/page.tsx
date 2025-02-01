@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ArtworkGrid } from '@/components/explore/ArtworkGrid'
 import { ArtworkCategory } from '@prisma/client'
 import { ServerPagination } from '@/components/ui/ServerPagination'
+import Image from 'next/image'
 
 const ITEMS_PER_PAGE = 20
 
@@ -51,13 +52,26 @@ export default async function ArtworksPage({
     <main className="min-h-screen">
       <div className="bg-white">
         <Container>
-          <div className="py-48">
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-7xl font-bold mb-12 text-gray-900 font-heading">Explore Inspirations</h1>
-              <div className="text-text-tertiary text-xl space-y-4 font-subheading">
-                <p>Discover the beauty in every pause.</p>
-                <p>Let inspiration find its way to you.</p>
-              </div>
+          <div className="max-w-6xl mx-auto px-8 py-24 flex flex-col md:flex-row items-center">
+            <div className="w-full md:w-1/2 space-y-8">
+              <h1 className="text-[2.8em] font-heading text-text-primary">
+                Explore Inspirations
+              </h1>
+              <p></p>
+              <p className="text-base font-body text-text-secondary">
+                Discover the beauty in every pause.
+                </p>
+                <p>Let inspiration find its way to you.
+              </p>
+            </div>
+            <div className="hidden md:block w-1/2 relative aspect-[5/4]">
+              <Image
+                src="/images/features/header01.jpg"
+                alt="Explore Inspirations"
+                fill
+                className="object-cover rounded-2xl"
+                priority
+              />
             </div>
           </div>
         </Container>
@@ -69,13 +83,13 @@ export default async function ArtworksPage({
             <Tabs defaultValue={type || 'all'} className="flex flex-col items-center">
               <TabsList className="mb-6">
                 <TabsTrigger value="all" asChild>
-                  <a href="/explore/artworks">All Artworks</a>
+                  <a href="/explore/artworks">All</a>
                 </TabsTrigger>
                 <TabsTrigger value={ArtworkCategory.COLORINGPAGES} asChild>
                   <a href={`/explore/artworks?type=${ArtworkCategory.COLORINGPAGES}`}>Coloring Pages</a>
                 </TabsTrigger>
                 <TabsTrigger value={ArtworkCategory.COLORFULVISUAL} asChild>
-                  <a href={`/explore/artworks?type=${ArtworkCategory.COLORFULVISUAL}`}>Visual Art</a>
+                  <a href={`/explore/artworks?type=${ArtworkCategory.COLORFULVISUAL}`}>Colorful Visual</a>
                 </TabsTrigger>
               </TabsList>
 

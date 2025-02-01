@@ -25,7 +25,7 @@ const menuItems: MenuItem[] = [
     label: 'Create',
     children: [
       {
-        label: 'Mindful Coloring',
+        label: 'Coloring Meditation',
         href: '/create/coloring',
         description: 'Create your own mindful coloring experience',
         image: '/images/nav/create-coloring.jpg'
@@ -37,7 +37,7 @@ const menuItems: MenuItem[] = [
         image: '/images/nav/meditation.jpg'
       },
       {
-        label: 'Inner Vision',
+        label: 'Soul Art Space',
         href: '/create/vision',
         description: 'Transform your thoughts into art',
         image: '/images/nav/vision.jpg'
