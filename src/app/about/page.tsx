@@ -4,124 +4,99 @@ import Image from 'next/image';
 export default function AboutPage() {
   return (
     <main>
-      {/* Hero Section */}
-      <div className="relative h-[400px] bg-gray-50">
-        <Container className="h-full flex items-center">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-heading mb-6">
-              About MindfulArt Studio
-            </h1>
-            <p className="text-lg text-text-secondary">
-              Empowering artists to explore mindfulness through creative expression
-            </p>
-          </div>
-        </Container>
-      </div>
+      {/* Spacer Container */}
+      <Container className="h-24">
+        <div />
+      </Container>
 
-      {/* Mission Section */}
+      {/* Content Section */}
       <Container className="py-16">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl font-heading mb-6">Our Mission</h2>
-            <div className="prose prose-lg">
-              <p>
-                At MindfulArt Studio, we believe in the transformative power of combining art with mindfulness. 
-                Our platform is designed to help artists and enthusiasts explore their creativity while maintaining 
-                a mindful approach to their practice.
-              </p>
-              <p>
-                We provide a space where traditional artistic techniques meet modern technology, 
-                creating unique opportunities for artistic expression and personal growth.
-              </p>
+      <div className="grid md:grid-cols-2 gap-12">
+          {/* Text Column */}
+          <div className="space-y-8">
+            {/* Who We Are Section */}
+            <div>
+              <h2 className="text-4xl font-heading mb-12">Who We Are</h2>
+              <div className="prose prose-lg">
+                <p>
+                  At MindfulArt Studio, we believe in the transformative power of combining art with mindfulness. 
+                </p>
+                <p></p>
+                <p>
+                  Our platform serves as a digital sanctuary where technology meets artistic expression, helping you create conscious touchpoints that anchor peace in your daily life.
+                </p>
+              </div>
+            </div>
+
+            {/* Collapsible Sections */}
+            <div className="space-y-4">
+              {/* Section 1 */}
+              <details className="group transition-all duration-300 ease-in-out">
+                <summary className="flex cursor-pointer items-center py-2 hover:text-primary transition-colors">
+                  <span className="mr-2 text-xl transition-transform duration-200">
+                    <span className="group-open:hidden">+</span>
+                    <span className="hidden group-open:inline">−</span>
+                  </span>
+                  <h5 className="text-xl font-heading">Your quiet harbor at fingertips</h5>
+                </summary>
+                <div className="pl-7 pt-2 prose prose-lg opacity-90 transform transition-all duration-300 ease-in-out">
+                  <p>In this fast-paced world,<br/>
+                  your sanctuary is just a touch away.<br/>
+                  A digital space that opens instantly,<br/>
+                  whenever you need a moment of peace.</p>
+                </div>
+              </details>
+
+              {/* Section 2 */}
+              <details className="group transition-all duration-300 ease-in-out">
+                <summary className="flex cursor-pointer items-center py-2 hover:text-primary transition-colors">
+                  <span className="mr-2 text-xl transition-transform duration-200">
+                    <span className="group-open:hidden">+</span>
+                    <span className="hidden group-open:inline">−</span>
+                  </span>
+                  <h5 className="text-xl font-heading">Your companion in creating mindful art anchors</h5>
+                </summary>
+                <div className="pl-7 pt-2 prose prose-lg opacity-90 transform transition-all duration-300 ease-in-out">
+                  <p>We help you create art infused with mindful presence,<br/>
+                  each piece resonating with inner peace.<br/>
+                  These mindful artworks become your daily companions,<br/>
+                  gently guiding you back to moments of serenity.</p>
+                </div>
+              </details>
+
+              {/* Section 3 */}
+              <details className="group transition-all duration-300 ease-in-out">
+                <summary className="flex cursor-pointer items-center py-2 hover:text-primary transition-colors">
+                  <span className="mr-2 text-xl transition-transform duration-200">
+                    <span className="group-open:hidden">+</span>
+                    <span className="hidden group-open:inline">−</span>
+                  </span>
+                  <h5 className="text-xl font-heading">Your sanctuary space of emotions</h5>
+                </summary>
+                <div className="pl-7 pt-2 prose prose-lg opacity-90 transform transition-all duration-300 ease-in-out">
+                  <p>In this space of artistic resonance,<br/>
+                  raw emotions transform into healing expression.<br/>
+                  Through each creation, feelings find their voice,<br/>
+                  painting a journey of inner restoration.</p>
+                </div>
+              </details>
             </div>
           </div>
-          <div className="relative aspect-[4/3]">
+
+          {/* Image Column */}
+          <div className="relative aspect-[3/2] shadow-lg rounded-lg overflow-hidden transform transition-shadow duration-300 hover:shadow-xl">
             <Image
               src="/images/about/mission.jpg"
               alt="Artist working in studio"
               fill
-              className="object-cover rounded-lg"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
             />
           </div>
         </div>
       </Container>
 
-      {/* Values Section */}
-      <div className="bg-gray-50 py-16">
-        <Container>
-          <h2 className="text-3xl font-heading mb-12 text-center">Our Values</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'Mindful Creation',
-                description: 'We encourage artists to approach their work with presence and intention.'
-              },
-              {
-                title: 'Community',
-                description: 'Building a supportive environment where artists can connect and grow together.'
-              },
-              {
-                title: 'Innovation',
-                description: 'Embracing new technologies while respecting traditional artistic practices.'
-              },
-              {
-                title: 'Accessibility',
-                description: 'Making art and mindfulness practices accessible to everyone.'
-              },
-              {
-                title: 'Quality',
-                description: 'Maintaining high standards in both artistic output and user experience.'
-              },
-              {
-                title: 'Sustainability',
-                description: 'Promoting sustainable practices in art creation and business operations.'
-              }
-            ].map((value, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg">
-                <h3 className="text-xl font-heading mb-3">{value.title}</h3>
-                <p className="text-text-secondary">{value.description}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </div>
-
-      {/* Team Section */}
-      <Container className="py-16">
-        <h2 className="text-3xl font-heading mb-12 text-center">Our Team</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[
-            {
-              name: 'Sarah Chen',
-              role: 'Founder & Creative Director',
-              image: '/images/about/team/sarah.jpg'
-            },
-            {
-              name: 'Michael Wong',
-              role: 'Head of Technology',
-              image: '/images/about/team/michael.jpg'
-            },
-            {
-              name: 'Emma Davis',
-              role: 'Community Manager',
-              image: '/images/about/team/emma.jpg'
-            }
-          ].map((member, index) => (
-            <div key={index} className="text-center">
-              <div className="relative w-48 h-48 mx-auto mb-4">
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  fill
-                  className="object-cover rounded-full"
-                />
-              </div>
-              <h3 className="text-xl font-heading mb-1">{member.name}</h3>
-              <p className="text-text-secondary">{member.role}</p>
-            </div>
-          ))}
-        </div>
-      </Container>
     </main>
   );
 } 

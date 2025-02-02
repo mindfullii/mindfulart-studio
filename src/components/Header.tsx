@@ -26,7 +26,7 @@ export function Header() {
               <Button 
                 variant="default" 
                 onClick={() => setShowAuthModal(true)}
-                className="ml-4 font-space-mono text-[14px] tracking-[0.02em] font-normal border border-gray-200 bg-transparent hover:bg-gray-50 text-gray-600"
+                className="ml-4 font-space-mono text-[11px] tracking-[0.02em] font-normal border border-gray-200 bg-transparent hover:bg-gray-50 text-gray-600"
               >
                 Sign In / Sign Up 
               </Button>
